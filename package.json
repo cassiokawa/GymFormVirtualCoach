@@ -1,0 +1,18 @@
+{
+  "name": "gym-form-virtual-coach",
+  "version": "0.1.0",
+  "description": "CV Fitness & Form Assistant — client-side pose analysis with LLM-backed workout planning",
+  "private": true,
+  "scripts": {
+    "build": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "fast-check": "^3.19.0",
+    "jsdom": "^29.1.1",
+    "typescript": "^5.4.5",
+    "vitest": "^1.6.0"
+  }
+}

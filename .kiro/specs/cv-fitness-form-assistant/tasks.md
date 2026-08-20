@@ -8,13 +8,13 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
 
 ## Tasks
 
-- [ ] 1. Set up project structure, shared types, and storage layer
-  - [ ] 1.1 Define all shared TypeScript interfaces and types
+- [x] 1. Set up project structure, shared types, and storage layer
+  - [x] 1.1 Define all shared TypeScript interfaces and types
     - Create `src/types/index.ts` with: `Keypoint`, `JointAngle`, `Rep`, `DeviationEvent`, `SetRecord`, `Session`, `SessionSummary`, `KeypointMessage`, `ErrorMessage`, `ExerciseFSMConfig`, `AngleThreshold`
     - Export all types from a barrel file
     - _Requirements: 1.1, 2.6, 3.1, 3.3, 4.2, 4.3, 8.1–8.4_
 
-  - [ ] 1.2 Implement the Storage layer (IndexedDB)
+  - [x] 1.2 Implement the Storage layer (IndexedDB)
     - Create `src/storage/Storage.ts`
     - Define `workout_sessions` table schema (id, started_at, ended_at, duration_ms, routine_id)
     - Define `session_exercise_logs` table schema (id, session_id, exercise_name, set_number, correct_reps, flawed_reps, dangerous_reps, actual_tut_ms, expected_tut_ms, deviation_events JSON)
@@ -29,8 +29,8 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test error event emitted and telemetry retained on write failure
     - _Requirements: 9.3, 9.4, 9.5_
 
-- [ ] 2. Implement joint angle calculation
-  - [ ] 2.1 Implement `calculateJointAngle` utility
+- [x] 2. Implement joint angle calculation
+  - [x] 2.1 Implement `calculateJointAngle` utility
     - Create `src/utils/jointAngle.ts`
     - Compute interior angle at keypoint B using `θ = arccos((BA·BC) / (|BA|×|BC|))`
     - Clamp result to `[0°, 180°]`
@@ -48,14 +48,14 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test clamping at boundaries
     - _Requirements: 3.3, 3.4_
 
-- [ ] 3. Implement Pose_Detector (Web Worker + MediaPipe)
-  - [ ] 3.1 Scaffold the WebAssembly Web Worker
+- [x] 3. Implement Pose_Detector (Web Worker + MediaPipe)
+  - [x] 3.1 Scaffold the WebAssembly Web Worker
     - Create `src/workers/poseDetector.worker.ts`
     - Load and initialize MediaPipe Pose WASM inside the worker
     - Emit `ErrorMessage` with code `INIT_FAILED` if initialization fails
     - _Requirements: 1.3, 1.4_
 
-  - [ ] 3.2 Implement frame processing and keypoint extraction
+  - [x] 3.2 Implement frame processing and keypoint extraction
     - Accept camera frames via `postMessage`
     - Extract 33 keypoints (x, y, z, confidence) per frame
     - Post `KeypointMessage` (type, frameId, timestampMs, keypoints[]) to main thread
@@ -68,14 +68,14 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test that error conditions produce the correct `ErrorMessage` codes
     - _Requirements: 1.4_
 
-- [ ] 4. Implement ExerciseFSMConfig system
-  - [ ] 4.1 Define `ExerciseFSMConfig` schema and validation
+- [x] 4. Implement ExerciseFSMConfig system
+  - [x] 4.1 Define `ExerciseFSMConfig` schema and validation
     - Create `src/config/exerciseConfigs.ts`
     - Define `ExerciseFSMConfig` type with fields: exerciseName, joints, startThreshold, inflectionThreshold, completeThreshold, warningThreshold, criticalThreshold
     - Implement a `validateFSMConfig(config: ExerciseFSMConfig): boolean` guard
     - _Requirements: 2.1, 2.2, 4.1_
 
-  - [ ] 4.2 Implement squat and core exercise configurations
+  - [x] 4.2 Implement squat and core exercise configurations
     - Add `squatConfig` matching the design example (barbell_squat thresholds)
     - Add at least one core exercise config (e.g., plank or deadlift) with lumbar extension criticalThreshold
     - Export all configs from a barrel file
@@ -86,8 +86,8 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test that configs with inverted min/max fail validation
     - _Requirements: 2.1_
 
-- [ ] 5. Implement Rep_Counter FSM
-  - [ ] 5.1 Implement FSM state transitions
+- [x] 5. Implement Rep_Counter FSM
+  - [x] 5.1 Implement FSM state transitions
     - Create `src/repCounter/RepCounter.ts`
     - Implement states: `START`, `INFLECTION`, `COMPLETE`
     - On each `KeypointMessage`, compute relevant `JointAngle`s via `calculateJointAngle`
@@ -97,7 +97,7 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Hold current state if any required angle is `available: false`
     - _Requirements: 2.1–2.4, 2.6_
 
-  - [ ] 5.2 Implement TUT recording and FSM reset
+  - [x] 5.2 Implement TUT recording and FSM reset
     - Record TUT from first `START` entry to `COMPLETE → START` transition in milliseconds
     - Expose `reset(): void` that sets FSM state to `START` and rep count to 0 for new set
     - _Requirements: 2.5, 2.6_
@@ -115,8 +115,8 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test hold behavior when angles unavailable
     - _Requirements: 2.3, 2.4, 2.5_
 
-- [ ] 6. Implement Form_Evaluator
-  - [ ] 6.1 Implement `evaluateFrame` with dual-threshold classification
+- [x] 6. Implement Form_Evaluator
+  - [x] 6.1 Implement `evaluateFrame` with dual-threshold classification
     - Create `src/formEvaluator/FormEvaluator.ts`
     - On each keypoint frame, calculate all `JointAngle`s for the active exercise using `calculateJointAngle`
     - Compare each angle against `warningThreshold` and `criticalThreshold` from `ExerciseFSMConfig`
@@ -136,8 +136,8 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test unavailable angles are skipped
     - _Requirements: 4.2, 4.3, 4.4_
 
-- [ ] 7. Implement Safety_Monitor and Alert_System
-  - [ ] 7.1 Implement Safety_Monitor deviation detection
+- [x] 7. Implement Safety_Monitor and Alert_System
+  - [x] 7.1 Implement Safety_Monitor deviation detection
     - Create `src/safetyMonitor/SafetyMonitor.ts`
     - Accept critical `DeviationEvent` notifications from Form_Evaluator
     - Detect Valgus_Cave: medial knee `JointAngle` < per-exercise threshold
@@ -145,7 +145,7 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Trigger Alert_System within 10 ms of receiving critical notification
     - _Requirements: 5.1, 5.5, 5.6_
 
-  - [ ] 7.2 Implement Alert_System audio and visual overlay
+  - [x] 7.2 Implement Alert_System audio and visual overlay
     - Create `src/alertSystem/AlertSystem.ts`
     - Play warning tone via Web Audio API on critical deviation
     - Render visual overlay banner on the video feed canvas
@@ -164,15 +164,15 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test overlay persists across consecutive critical frames
     - _Requirements: 5.2, 5.3, 5.4, 5.5, 5.6_
 
-- [ ] 8. Implement Session_Logger
-  - [ ] 8.1 Implement rep categorization and telemetry recording
+- [x] 8. Implement Session_Logger
+  - [x] 8.1 Implement rep categorization and telemetry recording
     - Create `src/sessionLogger/SessionLogger.ts`
     - Record each `Rep` with: repNumber, tutMs, category (correct | flawed | dangerous_aborted), deviationEvents[]
     - Mark a Rep as `dangerous_aborted` when Safety_Monitor notifies of critical deviation during that rep
     - Assemble `SetRecord` (setNumber, exerciseName, reps[], actualTutMs, expectedTutMs, tutDeltaMs)
     - _Requirements: 5.7, 8.1, 8.2_
 
-  - [ ] 8.2 Implement session persistence via Storage
+  - [x] 8.2 Implement session persistence via Storage
     - At session end, assemble `Session` object and call `Storage.persist(session)`
     - Pass `SessionSummary` to Analytics_Engine
     - _Requirements: 9.1, 9.2, 9.3, 8.5_
@@ -183,11 +183,11 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test session assembled and persisted on session end
     - _Requirements: 5.7, 9.1–9.3_
 
-- [ ] 9. Checkpoint — Ensure all execution-path tests pass
+- [x] 9. Checkpoint — Ensure all execution-path tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 10. Implement LlmGateway (phase enforcement)
-  - [ ] 10.1 Implement `LlmGateway` singleton with phase enforcement
+- [x] 10. Implement LlmGateway (phase enforcement)
+  - [x] 10.1 Implement `LlmGateway` singleton with phase enforcement
     - Create `src/llmGateway/LlmGateway.ts`
     - Maintain `currentPhase: AppPhase` ('pre_workout' | 'session_active' | 'post_workout')
     - In `request(caller, payload)`: reject and log policy violation if caller/phase combination is not permitted
@@ -195,7 +195,7 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Implement `setPhase(phase: AppPhase)` for phase transitions
     - _Requirements: 11.1–11.4_
 
-  - [ ] 10.2 Implement phase transition wiring
+  - [x] 10.2 Implement phase transition wiring
     - Transition `pre_workout → session_active` when first Set starts
     - Transition `session_active → post_workout` when Session ends
     - Transition `post_workout → pre_workout` when next session is initiated
@@ -212,8 +212,8 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test phase transitions update enforcement correctly
     - _Requirements: 11.1–11.4_
 
-- [ ] 11. Implement Routine_Generator (pre-workout)
-  - [ ] 11.1 Implement history query and routine assembly
+- [x] 11. Implement Routine_Generator (pre-workout)
+  - [x] 11.1 Implement history query and routine assembly
     - Create `src/routineGenerator/RoutineGenerator.ts`
     - Query Storage for 10 most recent Sessions; extract form errors, fatigue indicators, target muscle groups
     - Build LLM prompt with history summary; call `LlmGateway` (caller: 'Routine_Generator')
@@ -221,7 +221,7 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - If form errors present in ≥2 of last 10 sessions for a muscle group, reduce volume 20–40% in generated routine
     - _Requirements: 6.1–6.4_
 
-  - [ ] 11.2 Implement first-session baseline
+  - [x] 11.2 Implement first-session baseline
     - When Storage returns no prior sessions, generate baseline routine with ≥3 exercises covering chest, back, legs without error
     - _Requirements: 6.5_
 
@@ -231,15 +231,15 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test routine returned within 5 s constraint
     - _Requirements: 6.3, 6.4, 6.5_
 
-- [ ] 12. Implement Form_Guide (pre-workout)
-  - [ ] 12.1 Implement step-by-step instruction display
+- [x] 12. Implement Form_Guide (pre-workout)
+  - [x] 12.1 Implement step-by-step instruction display
     - Create `src/formGuide/FormGuide.ts` (and corresponding UI component)
     - Display step-by-step biomechanical instructions when user selects an exercise
     - Display ≥1 reference visual media item showing target range of motion
     - Display ≥1 reference visual media item highlighting common mistakes
     - _Requirements: 7.1, 7.2, 7.3_
 
-  - [ ] 12.2 Implement readiness confirmation and phase transition
+  - [x] 12.2 Implement readiness confirmation and phase transition
     - On user confirming readiness, transition application to workout execution phase for that Set
     - _Requirements: 7.4_
 
@@ -248,15 +248,15 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test readiness confirmation triggers execution phase
     - _Requirements: 7.1, 7.4_
 
-- [ ] 13. Implement Analytics_Engine (post-workout)
-  - [ ] 13.1 Implement rep categorization and TUT calculation
+- [x] 13. Implement Analytics_Engine (post-workout)
+  - [x] 13.1 Implement rep categorization and TUT calculation
     - Create `src/analyticsEngine/AnalyticsEngine.ts`
     - Categorize every logged Rep into exactly one of: correct, flawed, dangerous_aborted
     - Sum Rep TUTs per Set → `actualTutMs`
     - Compute TUT delta (actual − expected) per Set
     - _Requirements: 8.1, 8.2, 8.3_
 
-  - [ ] 13.2 Implement SessionSummary assembly and downstream dispatch
+  - [x] 13.2 Implement SessionSummary assembly and downstream dispatch
     - Assemble `SessionSummary` (sessionId, totalCorrectReps, totalFlawedReps, totalDangerousReps, setBreakdowns, allDeviationEvents)
     - Pass summary to Coaching_Advisor and to Storage for persistence
     - _Requirements: 8.4, 8.5_
@@ -272,15 +272,15 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test SessionSummary passed to both Coaching_Advisor and Storage
     - _Requirements: 8.1–8.5_
 
-- [ ] 14. Implement Coaching_Advisor (post-workout)
-  - [ ] 14.1 Implement LLM-backed coaching advice generation
+- [x] 14. Implement Coaching_Advisor (post-workout)
+  - [x] 14.1 Implement LLM-backed coaching advice generation
     - Create `src/coachingAdvisor/CoachingAdvisor.ts`
     - Receive `SessionSummary` from Analytics_Engine
     - Call `LlmGateway` (caller: 'Coaching_Advisor') with session summary payload
     - Produce ≥1 recommendation per deviation event / rep category
     - _Requirements: 10.1_
 
-  - [ ] 14.2 Implement next-session pre-population and offline fallback
+  - [x] 14.2 Implement next-session pre-population and offline fallback
     - Pre-populate next session params (weight, sets, reps): UP if performance targets met; HOLD otherwise
     - Return coaching advice + pre-populated next-session parameters to UI
     - If LLM unavailable, display raw SessionSummary with "AI coaching unavailable" message
@@ -292,40 +292,40 @@ Implementation follows the three-phase architecture — pre-workout, workout exe
     - Test offline fallback renders raw summary with correct message
     - _Requirements: 10.1–10.4_
 
-- [ ] 15. Checkpoint — Ensure all pre/post-workout tests pass
+- [x] 15. Checkpoint — Ensure all pre/post-workout tests pass
   - Ensure all tests pass, ask the user if questions arise.
 
-- [ ] 16. Integration wiring — connect all components end-to-end
-  - [ ] 16.1 Wire Pose_Detector worker to Form_Evaluator and Rep_Counter
+- [x] 16. Integration wiring — connect all components end-to-end
+  - [x] 16.1 Wire Pose_Detector worker to Form_Evaluator and Rep_Counter
     - In `src/app/WorkoutSession.ts`, subscribe to `KeypointMessage` from the Web Worker
     - Forward keypoints to `FormEvaluator.evaluateFrame()` and `RepCounter.update()`
     - Forward `ErrorMessage` events to UI error boundary
     - _Requirements: 1.3, 1.5_
 
-  - [ ] 16.2 Wire Form_Evaluator → Safety_Monitor → Alert_System → Session_Logger
+  - [x] 16.2 Wire Form_Evaluator → Safety_Monitor → Alert_System → Session_Logger
     - Connect critical `DeviationEvent` from FormEvaluator to SafetyMonitor
     - Connect SafetyMonitor trigger to AlertSystem
     - Connect critical deviation during Rep to SessionLogger rep marking
     - _Requirements: 4.4, 5.1, 5.2, 5.7_
 
-  - [ ] 16.3 Wire Rep_Counter → Session_Logger → Analytics_Engine → Storage
+  - [x] 16.3 Wire Rep_Counter → Session_Logger → Analytics_Engine → Storage
     - On rep complete, pass `Rep` to SessionLogger
     - On session end, SessionLogger assembles Session, calls AnalyticsEngine and Storage
     - _Requirements: 2.3, 2.6, 8.4, 8.5, 9.1, 9.2_
 
-  - [ ] 16.4 Wire phase transitions through LlmGateway
+  - [x] 16.4 Wire phase transitions through LlmGateway
     - Call `LlmGateway.setPhase('session_active')` when first Set starts
     - Call `LlmGateway.setPhase('post_workout')` when Session ends
     - Call `LlmGateway.setPhase('pre_workout')` when new session initiated
     - _Requirements: 11.1–11.3_
 
-  - [ ] 16.5 Wire Routine_Generator and Form_Guide into pre-workout phase
+  - [x] 16.5 Wire Routine_Generator and Form_Guide into pre-workout phase
     - Render `Form_Guide` component when user selects an exercise
     - On readiness confirmation, start workout execution phase for that Set
     - On routine request, call `RoutineGenerator.generate()` and display result
     - _Requirements: 6.1–6.4, 7.1–7.4_
 
-  - [ ] 16.6 Wire Analytics_Engine and Coaching_Advisor into post-workout phase
+  - [x] 16.6 Wire Analytics_Engine and Coaching_Advisor into post-workout phase
     - After session ends, render SessionSummary from AnalyticsEngine
     - Render coaching advice and pre-populated next-session params from CoachingAdvisor when available
     - _Requirements: 8.4, 10.1–10.4_
