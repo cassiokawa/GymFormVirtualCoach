@@ -5,20 +5,25 @@
  * forwards keypoints to `FormEvaluator.evaluateFrame()` and `RepCounter.update()`.
  * Forwards `ErrorMessage` events to the UI error boundary callback.
  *
- * Requirements covered: 1.3, 1.5
+ * Requirements covered: 1.3, 1.5, 4.1, 4.2, 4.3, 4.4
  *   - 1.3: Pose_Detector executes within a Web Worker; this class subscribes
  *           to its messages on the main thread.
  *   - 1.5: Keypoint data is delivered to Form_Evaluator and Rep_Counter
  *           within 50 ms of frame capture.
+ *   - 4.1: Pre-tracking phase gates frames before forwarding to RepCounter/FormEvaluator.
+ *   - 4.2: Lock transition enables frame forwarding to RepCounter/FormEvaluator.
+ *   - 4.3: Pre-tracking consumes same KeypointMessage format without worker changes.
+ *   - 4.4: Skip lock bypasses the countdown and enters Active_Tracking immediately.
  */
 
-import type { KeypointMessage, ErrorMessage, ExerciseFSMConfig } from '../types/index.js';
+import type { KeypointMessage, ErrorMessage, ExerciseFSMConfig, PreTrackingStatus } from '../types/index.js';
 import { RepCounter } from '../repCounter/RepCounter.js';
 import { FormEvaluator } from '../formEvaluator/FormEvaluator.js';
 import type { CriticalDeviationCallback } from '../formEvaluator/FormEvaluator.js';
 import { SafetyMonitor } from '../safetyMonitor/SafetyMonitor.js';
 import { AlertSystem } from '../alertSystem/AlertSystem.js';
 import { SessionLogger } from '../sessionLogger/SessionLogger.js';
+import { PreTrackingController } from '../preTracking/PreTrackingController.js';
 
 // ---------------------------------------------------------------------------
 // Public types
@@ -52,6 +57,9 @@ export class WorkoutSession {
   private readonly alertSystem: AlertSystem;
   private readonly sessionLogger: SessionLogger;
   private readonly onError: ErrorCallback;
+  private readonly preTrackingController: PreTrackingController | undefined;
+  private readonly onPreTrackingStatus: ((status: PreTrackingStatus) => void) | undefined;
+  private trackingState: 'pre_tracking' | 'active' = 'pre_tracking';
   private isActive = false;
 
   constructor(options: {
@@ -61,8 +69,11 @@ export class WorkoutSession {
     expectedTutMs: number;
     canvasContainer: HTMLElement;
     onError: ErrorCallback;
+    canvas?: HTMLCanvasElement;
+    onPreTrackingStatus?: (status: PreTrackingStatus) => void;
   }) {
     this.onError = options.onError;
+    this.onPreTrackingStatus = options.onPreTrackingStatus;
 
     // Set up alert system (visual overlay + audio on canvas container)
     this.alertSystem = new AlertSystem(options.canvasContainer);
@@ -86,6 +97,20 @@ export class WorkoutSession {
     // Set up session logger (accumulates rep telemetry)
     this.sessionLogger = new SessionLogger(options.sessionId, options.routineId);
     this.sessionLogger.startSet(options.config.exerciseName, options.expectedTutMs);
+
+    // Set up pre-tracking controller when canvas is provided
+    if (options.canvas) {
+      this.preTrackingController = new PreTrackingController({
+        canvas: options.canvas,
+        config: options.config,
+      });
+      this.preTrackingController.onLockAchieved(() => {
+        this.trackingState = 'active';
+      });
+    } else {
+      // No canvas provided — skip pre-tracking entirely (backward compatible)
+      this.trackingState = 'active';
+    }
   }
 
   // -------------------------------------------------------------------------
@@ -155,6 +180,16 @@ export class WorkoutSession {
     return this.isActive;
   }
 
+  /**
+   * Skip the pre-tracking lock countdown and immediately enter Active_Tracking.
+   * Delegates to PreTrackingController.skipLock().
+   *
+   * Requirement 4.4 — Manual skip bypasses lock countdown.
+   */
+  skipLock(): void {
+    this.preTrackingController?.skipLock();
+  }
+
   // -------------------------------------------------------------------------
   // Private — frame handling
   // -------------------------------------------------------------------------
@@ -162,18 +197,25 @@ export class WorkoutSession {
   /**
    * Process a single KeypointMessage from the Pose_Detector worker.
    *
-   * Forwards keypoints to:
-   *   1. RepCounter.update() — FSM state transitions and rep counting
-   *   2. FormEvaluator.evaluateFrame() — deviation detection
+   * During pre-tracking: routes frames through PreTrackingController and
+   * emits status via callback. Does NOT forward to RepCounter/FormEvaluator.
    *
-   * On rep completion, records the rep in SessionLogger and advances the
-   * FormEvaluator's rep number.
+   * During active tracking: forwards keypoints to RepCounter.update() and
+   * FormEvaluator.evaluateFrame() as before.
    *
-   * Requirement 1.5 — Keypoint data forwarded within 50 ms of frame capture.
+   * Requirements: 1.5, 4.1, 4.2
    */
   private handleKeypoints(message: KeypointMessage): void {
     if (!this.isActive) return;
 
+    // Pre-tracking gate: route through PreTrackingController
+    if (this.trackingState === 'pre_tracking' && this.preTrackingController) {
+      const status = this.preTrackingController.processFrame(message);
+      this.onPreTrackingStatus?.(status);
+      return; // Do NOT forward to RepCounter/FormEvaluator yet
+    }
+
+    // Active tracking — existing logic (unchanged)
     const prevRepCount = this.repCounter.getRepCount();
 
     // Forward to rep counter (FSM transitions)

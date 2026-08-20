@@ -117,54 +117,52 @@ export class RepCounter {
    *
    * Computes joint angles for every joint listed in `config.joints`, then
    * evaluates the appropriate state-transition predicate for the current
-   * FSM state.  If any joint angle is unavailable the current state is
-   * held unchanged.
+   * FSM state. Unavailable joints are skipped (not counted). Transitions
+   * fire when a MAJORITY (>= 50%) of available joints satisfy the range.
+   * This makes tracking forgiving when the camera partially cuts the body.
    *
    * On the first call after construction or reset, captures `startTimestamp`
-   * for TUT measurement (Requirement 2.5).
-   *
-   * Requirement 2.3 — transitions fire when ALL joints satisfy the range.
-   * Requirement 2.4 — hold state when any angle is unavailable.
+   * for TUT measurement.
    */
   update(message: KeypointMessage): void {
     const angles = this.computeAngles(message);
 
-    // Requirement 2.4: if any angle is unavailable, hold current state.
-    if (angles.some((a) => !a.available)) {
+    // Filter to only available angles — skip joints the camera can't see
+    const available = angles.filter((a) => a.available);
+
+    // Need at least 1 available joint to make a decision
+    if (available.length === 0) {
       return;
     }
 
-    // Capture start timestamp on the very first valid frame (Requirement 2.5).
+    // Capture start timestamp on the very first valid frame
     if (this.startTimestamp === null) {
       this.startTimestamp = message.timestampMs;
     }
 
     switch (this.state) {
       case 'START':
-        if (this.allWithin(angles, this.config.inflectionThreshold.min, this.config.inflectionThreshold.max)) {
+        if (this.majorityWithin(available, this.config.inflectionThreshold.min, this.config.inflectionThreshold.max)) {
           this.state = 'INFLECTION';
         }
         break;
 
       case 'INFLECTION':
-        if (this.allWithin(angles, this.config.completeThreshold.min, this.config.completeThreshold.max)) {
+        if (this.majorityWithin(available, this.config.completeThreshold.min, this.config.completeThreshold.max)) {
           this.state = 'COMPLETE';
         }
         break;
 
       case 'COMPLETE':
-        if (this.allWithin(angles, this.config.startThreshold.min, this.config.startThreshold.max)) {
-          // --- TUT calculation (Requirement 2.5, 2.6) ---
-          // startTimestamp is guaranteed non-null here because it was set on
-          // the first valid frame processed by this instance.
+        if (this.majorityWithin(available, this.config.startThreshold.min, this.config.startThreshold.max)) {
+          // --- TUT calculation ---
           const tutMs = message.timestampMs - (this.startTimestamp as number);
           this.lastRepTutMs = tutMs;
 
           // Rep count increments (1-based).
           this.repCount += 1;
 
-          // Record the completed rep (category defaults to 'correct';
-          // Form_Evaluator will update it if deviations were observed).
+          // Record the completed rep
           const rep: Rep = {
             repNumber: this.repCount,
             tutMs,
@@ -173,7 +171,7 @@ export class RepCounter {
           };
           this.completedReps.push(rep);
 
-          // Reset TUT start to this frame so the next rep is timed from now.
+          // Reset TUT start to this frame
           this.startTimestamp = message.timestampMs;
           this.state = 'START';
         }
@@ -278,10 +276,12 @@ export class RepCounter {
   }
 
   /**
-   * Returns `true` when every angle in the array falls within [min, max].
-   * Assumes all angles are available (caller must check before calling).
+   * Returns `true` when at least half of the available angles fall within [min, max].
+   * This makes tracking forgiving — partial body visibility still allows counting.
    */
-  private allWithin(angles: JointAngle[], min: number, max: number): boolean {
-    return angles.every((a) => withinRange(a.degrees, min, max));
+  private majorityWithin(angles: JointAngle[], min: number, max: number): boolean {
+    if (angles.length === 0) return false;
+    const inRange = angles.filter((a) => withinRange(a.degrees, min, max)).length;
+    return inRange >= Math.ceil(angles.length / 2);
   }
 }

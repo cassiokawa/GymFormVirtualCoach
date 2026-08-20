@@ -11,7 +11,7 @@
 import type { Keypoint, JointAngle } from '../types/index.js';
 
 /** Minimum confidence score for a keypoint to be considered valid. */
-const MIN_CONFIDENCE = 0.5;
+const MIN_CONFIDENCE = 0.3;
 
 /**
  * Returns `true` when the keypoint has sufficient confidence and normalised

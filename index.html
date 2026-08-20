@@ -35,12 +35,13 @@
   <div id="controls">
     <button id="startBtn">▶ Start Squat Tracking</button>
     <button id="stopBtn" disabled>■ Stop</button>
+    <button id="skipBtn" style="display:none;">⏭ Skip Lock</button>
   </div>
   <div id="stats">
-    <div class="stat-card"><div class="value" id="repCount">0</div><div class="label">Reps</div></div>
-    <div class="stat-card"><div class="value" id="fsmState">IDLE</div><div class="label">FSM State</div></div>
+    <div class="stat-card" id="statReps"><div class="value" id="repCount">0</div><div class="label">Reps</div></div>
+    <div class="stat-card" id="statFsm"><div class="value" id="fsmState">IDLE</div><div class="label">FSM State</div></div>
     <div class="stat-card"><div class="value" id="fps">0</div><div class="label">FPS</div></div>
-    <div class="stat-card"><div class="value" id="lastTut">—</div><div class="label">Last TUT (ms)</div></div>
+    <div class="stat-card" id="statTut"><div class="value" id="lastTut">—</div><div class="label">Last TUT (ms)</div></div>
   </div>
   <div id="guide-container"></div>
   <script type="module" src="/src/demo/main.ts"></script>

@@ -78,11 +78,11 @@ export function validateFSMConfig(config: ExerciseFSMConfig): boolean {
 export const squatConfig: ExerciseFSMConfig = {
   exerciseName: 'barbell_squat',
   joints: ['left_knee', 'right_knee', 'left_hip', 'right_hip'],
-  startThreshold:      { min: 160, max: 180 }, // standing upright
-  inflectionThreshold: { min: 90,  max: 130 }, // mid-descent
-  completeThreshold:   { min: 60,  max: 95  }, // bottom position
-  warningThreshold:    { min: 0,   max: 55  }, // too deep / form break
-  criticalThreshold:   { min: 0,   max: 160 }, // Valgus_Cave: knee < 160° = knee caving
+  startThreshold:      { min: 140, max: 180 }, // standing upright (very forgiving)
+  inflectionThreshold: { min: 70,  max: 145 }, // mid-descent (wide window)
+  completeThreshold:   { min: 40,  max: 110 }, // bottom position (wide window)
+  warningThreshold:    { min: 30,  max: 180 }, // safe zone — only extreme depth warns
+  criticalThreshold:   { min: 20,  max: 180 }, // critical — only extremely dangerous depth
 };
 
 /**

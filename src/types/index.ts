@@ -282,3 +282,40 @@ export interface ExerciseFSMConfig {
  * Requirements 11.1–11.4
  */
 export type AppPhase = 'pre_workout' | 'session_active' | 'post_workout';
+
+// ---------------------------------------------------------------------------
+// Pre-Tracking Pipeline (User Framing & Lock)
+// ---------------------------------------------------------------------------
+
+export interface LockConfig {
+  lockThreshold: number;
+  lockDuration: number;
+  pauseAfterFrames: number;
+  pauseThreshold: number;
+}
+
+export type PreTrackingState = 'framing' | 'positioning' | 'locking' | 'active';
+
+export interface PositionCue {
+  jointName: string;
+  message: string;
+  currentAngle: number;
+  targetMin: number;
+  targetMax: number;
+}
+
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface PreTrackingStatus {
+  state: PreTrackingState;
+  framingScore: number;
+  startingPositionScore: number;
+  lockProgress: number;
+  positionCues: PositionCue[];
+  isLocked: boolean;
+}

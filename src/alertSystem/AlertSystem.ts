@@ -30,14 +30,18 @@ export class AlertSystem {
 
   /**
    * Called by Safety_Monitor when a critical deviation is detected on a frame.
-   * Increments the consecutive-frame counter, plays an audio warning, and
-   * shows the visual overlay once the threshold (≥2 frames) is reached.
+   * Increments the consecutive-frame counter, plays an audio warning ONCE
+   * per episode, and shows the visual overlay once the threshold (≥2 frames)
+   * is reached.
    *
    * Requirement 5.2, 5.3, 5.4
    */
   trigger(event: DeviationEvent, alertType: SafetyAlertType): void {
     this.consecutiveCriticalFrames++;
-    this.playWarningTone();
+    // Play ONE brief beep at the start of a dangerous episode only
+    if (this.consecutiveCriticalFrames === 1) {
+      this.playWarningBeep();
+    }
     if (this.consecutiveCriticalFrames >= this.OVERLAY_THRESHOLD) {
       this.showOverlay(event, alertType);
     }
@@ -72,26 +76,24 @@ export class AlertSystem {
   // -------------------------------------------------------------------------
 
   /**
-   * Plays a short 440 Hz square-wave warning tone.
-   * Gracefully degrades when Web Audio API is unavailable.
-   *
-   * Requirement 5.2
+   * Plays a single brief beep (200ms, 660Hz sine wave) to signal a dangerous
+   * movement. Called once at the start of each dangerous episode.
    */
-  private playWarningTone(): void {
+  private playWarningBeep(): void {
     try {
       if (this.audioCtx === null) {
         this.audioCtx = new AudioContext();
       }
       const oscillator = this.audioCtx.createOscillator();
       const gain = this.audioCtx.createGain();
-      oscillator.type = 'square';
-      oscillator.frequency.setValueAtTime(440, this.audioCtx.currentTime);
-      gain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.3);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(660, this.audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.4, this.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.2);
       oscillator.connect(gain);
       gain.connect(this.audioCtx.destination);
       oscillator.start();
-      oscillator.stop(this.audioCtx.currentTime + 0.3);
+      oscillator.stop(this.audioCtx.currentTime + 0.2);
     } catch {
       /* Web Audio unavailable — degrade silently */
     }
