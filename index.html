@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CV Fitness & Form Assistant</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
+    h1 { margin-bottom: 12px; font-size: 1.5rem; }
+    #status { margin-bottom: 16px; padding: 8px 16px; border-radius: 8px; background: #16213e; font-size: 0.9rem; }
+    #video-container { position: relative; width: 640px; max-width: 100%; border-radius: 12px; overflow: hidden; background: #000; }
+    video { width: 100%; display: block; transform: scaleX(-1); }
+    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
+    #controls { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+    button { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: transform 0.1s; }
+    button:active { transform: scale(0.95); }
+    #startBtn { background: #00b894; color: #fff; }
+    #stopBtn { background: #d63031; color: #fff; }
+    #stats { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; width: 640px; max-width: 100%; }
+    .stat-card { background: #16213e; border-radius: 8px; padding: 16px; text-align: center; }
+    .stat-card .value { font-size: 2rem; font-weight: bold; color: #00b894; }
+    .stat-card .label { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
+    #guide-container { margin-top: 20px; width: 640px; max-width: 100%; }
+    .alert-overlay { font-size: 1.1rem !important; }
+  </style>
+</head>
+<body>
+  <h1>🏋️ CV Fitness & Form Assistant</h1>
+  <div id="status">Click "Start" to begin pose detection</div>
+  <div id="video-container">
+    <video id="video" autoplay playsinline muted></video>
+    <canvas id="overlay"></canvas>
+  </div>
+  <div id="controls">
+    <button id="startBtn">▶ Start Squat Tracking</button>
+    <button id="stopBtn" disabled>■ Stop</button>
+  </div>
+  <div id="stats">
+    <div class="stat-card"><div class="value" id="repCount">0</div><div class="label">Reps</div></div>
+    <div class="stat-card"><div class="value" id="fsmState">IDLE</div><div class="label">FSM State</div></div>
+    <div class="stat-card"><div class="value" id="fps">0</div><div class="label">FPS</div></div>
+    <div class="stat-card"><div class="value" id="lastTut">—</div><div class="label">Last TUT (ms)</div></div>
+  </div>
+  <div id="guide-container"></div>
+  <script type="module" src="/src/demo/main.ts"></script>
+</body>
+</html>

@@ -4,6 +4,7 @@
   "description": "CV Fitness & Form Assistant — client-side pose analysis with LLM-backed workout planning",
   "private": true,
   "scripts": {
+    "dev": "vite",
     "build": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
@@ -13,6 +14,10 @@
     "fast-check": "^3.19.0",
     "jsdom": "^29.1.1",
     "typescript": "^5.4.5",
+    "vite": "^8.2.2",
     "vitest": "^1.6.0"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.1"
   }
 }
