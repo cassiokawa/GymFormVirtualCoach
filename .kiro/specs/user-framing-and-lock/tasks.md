@@ -36,7 +36,7 @@ Implement a pre-tracking pipeline that gates RepCounter and FormEvaluator behind
     - Color logic: red (score < 0.5), yellow (0.5 ≤ score < 0.7), green (score ≥ 0.7)
     - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5_
 
-  - [ ]* 2.2 Write unit tests for FramingGuide
+  - [x] 2.2 Write unit tests for FramingGuide
     - Test framingScore formula with mock keypoints (all visible = high score)
     - Test bounding box computation with various keypoint distributions
     - Test colour transitions at threshold boundaries (0.5, 0.7)
@@ -56,7 +56,7 @@ Implement a pre-tracking pipeline that gates RepCounter and FormEvaluator behind
     - Cue logic: if `currentAngle < threshold.min` → "Extend more" / if `currentAngle > threshold.max` → "Bend less"
     - _Requirements: 2.1, 2.2, 2.3, 2.4_
 
-  - [ ]* 3.2 Write unit tests for PositionAdvisor
+  - [x] 3.2 Write unit tests for PositionAdvisor
     - Test score = 1.0 when all tracked joints are within startThreshold range
     - Test score < 1.0 with partial joints in range
     - Test directional cue: below-min angle produces "Extend" cue
@@ -84,7 +84,7 @@ Implement a pre-tracking pipeline that gates RepCounter and FormEvaluator behind
     - Implement `getState(): PreTrackingState` accessor
     - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 3.6_
 
-  - [ ]* 4.2 Write unit tests for PoseLock
+  - [x] 4.2 Write unit tests for PoseLock
     - Test lock acquired after exactly `lockDuration` consecutive good frames
     - Test counter resets to 0 when any required keypoint drops below threshold
     - Test `getLockProgress()` returns correct fraction during countdown
@@ -115,7 +115,7 @@ Implement a pre-tracking pipeline that gates RepCounter and FormEvaluator behind
     - Implement `getState(): PreTrackingState` accessor
     - _Requirements: 1.1, 2.1, 2.4, 3.1, 3.2, 4.1, 4.4_
 
-  - [ ]* 6.2 Write unit tests for PreTrackingController
+  - [x] 6.2 Write unit tests for PreTrackingController
     - Test full state transition pipeline: framing → positioning → locking → active
     - Test regression from active → framing when pause condition triggers
     - Test skipLock() immediately sets state to active and fires callback
@@ -137,7 +137,7 @@ Implement a pre-tracking pipeline that gates RepCounter and FormEvaluator behind
     - Add public `skipLock(): void` method delegating to PreTrackingController.skipLock()
     - _Requirements: 4.1, 4.2, 4.3, 4.4_
 
-  - [ ]* 7.2 Write unit tests for WorkoutSession pre-tracking integration
+  - [x] 7.2 Write unit tests for WorkoutSession pre-tracking integration
     - Test that KeypointMessages are NOT forwarded to RepCounter during pre_tracking state
     - Test that KeypointMessages ARE forwarded to RepCounter once active
     - Test skipLock() transitions immediately to active tracking

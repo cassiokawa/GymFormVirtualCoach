@@ -7,13 +7,17 @@
  */
 
 import { FilesetResolver, PoseLandmarker } from '@mediapipe/tasks-vision';
-import type { Keypoint, KeypointMessage, ExerciseFSMConfig, PreTrackingStatus, PositionCue } from '../types/index.js';
+import type { Keypoint, KeypointMessage, ExerciseFSMConfig, PreTrackingStatus, PositionCue, DeviationEvent, Session } from '../types/index.js';
 import { RepCounter } from '../repCounter/RepCounter.js';
 import { FormEvaluator } from '../formEvaluator/FormEvaluator.js';
 import { SafetyMonitor } from '../safetyMonitor/SafetyMonitor.js';
 import { AlertSystem } from '../alertSystem/AlertSystem.js';
 import { PreTrackingController } from '../preTracking/PreTrackingController.js';
-import { squatConfig } from '../config/exerciseConfigs.js';
+import { allConfigs } from '../config/exerciseConfigs.js';
+import { EXERCISE_CATALOG, getExerciseByName } from '../config/exerciseCatalog.js';
+import { RoutineMode } from './routineMode.js';
+import { Storage } from '../storage/Storage.js';
+import { ExerciseLogPanel } from '../exerciseLog/ExerciseLogPanel.js';
 
 // ---------------------------------------------------------------------------
 // DOM elements
@@ -22,10 +26,18 @@ import { squatConfig } from '../config/exerciseConfigs.js';
 const video = document.getElementById('video') as HTMLVideoElement;
 const canvas = document.getElementById('overlay') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d')!;
+const uiCanvas = document.getElementById('ui-overlay') as HTMLCanvasElement;
+const uiCtx = uiCanvas.getContext('2d')!;
+const countdownOverlay = document.getElementById('countdown-overlay')!;
 const statusEl = document.getElementById('status')!;
 const startBtn = document.getElementById('startBtn') as HTMLButtonElement;
 const stopBtn = document.getElementById('stopBtn') as HTMLButtonElement;
 const skipBtn = document.getElementById('skipBtn') as HTMLButtonElement;
+const exerciseSelect = document.getElementById('exerciseSelect') as HTMLSelectElement;
+const sensitivitySlider = document.getElementById('sensitivitySlider') as HTMLInputElement;
+const sensitivityValue = document.getElementById('sensitivityValue')!;
+const framingSlider = document.getElementById('framingSlider') as HTMLInputElement;
+const framingValue = document.getElementById('framingValue')!;
 const repCountEl = document.getElementById('repCount')!;
 const fsmStateEl = document.getElementById('fsmState')!;
 const fpsEl = document.getElementById('fps')!;
@@ -36,6 +48,25 @@ const videoContainer = document.getElementById('video-container')!;
 const statReps = document.getElementById('statReps')!;
 const statFsm = document.getElementById('statFsm')!;
 const statTut = document.getElementById('statTut')!;
+
+// ---------------------------------------------------------------------------
+// Routine Mode DOM elements
+// ---------------------------------------------------------------------------
+
+const routineListEl = document.getElementById('routine-list')!;
+const routineExerciseAdd = document.getElementById('routineExerciseAdd') as HTMLSelectElement;
+const routineRepsInput = document.getElementById('routineReps') as HTMLInputElement;
+const addToRoutineBtn = document.getElementById('addToRoutine') as HTMLButtonElement;
+const startRoutineBtn = document.getElementById('startRoutineBtn') as HTMLButtonElement;
+const routineProgressEl = document.getElementById('routine-progress')!;
+const routineProgressText = document.getElementById('routine-progress-text')!;
+const routineProgressBar = document.getElementById('routine-progress-bar')!;
+
+// ---------------------------------------------------------------------------
+// Routine Mode instance
+// ---------------------------------------------------------------------------
+
+const routineMode = new RoutineMode();
 
 // ---------------------------------------------------------------------------
 // State
@@ -55,6 +86,19 @@ let alertSystem: AlertSystem;
 // Pre-tracking state
 let preTrackingActive = true;
 let preTrackingController: PreTrackingController | null = null;
+
+// ---------------------------------------------------------------------------
+// Exercise Log
+// ---------------------------------------------------------------------------
+
+const logStorage = Storage.getInstance();
+logStorage.open().catch(() => { /* IndexedDB might not be available in all envs */ });
+const logPanel = new ExerciseLogPanel(logStorage);
+logPanel.mount(document.getElementById('log-container')!);
+
+// Track the exercise name and start time for session logging
+let selectedExerciseName = '';
+let sessionStartTime = 0;
 
 // ---------------------------------------------------------------------------
 // Initialization
@@ -88,6 +132,8 @@ async function initCamera(): Promise<void> {
   await video.play();
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
+  uiCanvas.width = video.videoWidth;
+  uiCanvas.height = video.videoHeight;
   statusEl.textContent = 'Camera active. Step into frame...';
 }
 
@@ -135,12 +181,12 @@ function getStatusText(status: PreTrackingStatus): string {
 }
 
 function renderPositionCues(cues: PositionCue[]): void {
-  const w = canvas.width;
-  const h = canvas.height;
+  const w = uiCanvas.width;
+  const h = uiCanvas.height;
 
-  ctx.font = '16px -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(255, 220, 100, 0.95)';
-  ctx.textAlign = 'center';
+  uiCtx.font = '16px -apple-system, sans-serif';
+  uiCtx.fillStyle = 'rgba(255, 220, 100, 0.95)';
+  uiCtx.textAlign = 'center';
 
   const startY = h * 0.15;
   const lineHeight = 24;
@@ -148,23 +194,51 @@ function renderPositionCues(cues: PositionCue[]): void {
   for (let i = 0; i < cues.length; i++) {
     const cue = cues[i];
     if (!cue) continue;
-    ctx.fillText(cue.message, w / 2, startY + i * lineHeight);
+    uiCtx.fillText(cue.message, w / 2, startY + i * lineHeight);
   }
 }
 
 function renderLockProgress(progress: number): void {
-  const w = canvas.width;
-  const h = canvas.height;
+  const w = uiCanvas.width;
+  const h = uiCanvas.height;
   const pct = Math.round(progress * 100);
 
-  ctx.font = 'bold 28px -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(0, 184, 148, 0.95)';
-  ctx.textAlign = 'center';
-  ctx.fillText(`${pct}%`, w / 2, h * 0.12);
+  uiCtx.font = 'bold 28px -apple-system, sans-serif';
+  uiCtx.fillStyle = 'rgba(0, 184, 148, 0.95)';
+  uiCtx.textAlign = 'center';
+  uiCtx.fillText(`${pct}%`, w / 2, h * 0.12);
 
-  ctx.font = '14px -apple-system, sans-serif';
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-  ctx.fillText('Hold still…', w / 2, h * 0.12 + 28);
+  uiCtx.font = '14px -apple-system, sans-serif';
+  uiCtx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+  uiCtx.fillText('Hold still…', w / 2, h * 0.12 + 28);
+}
+
+/** Render form deviation warnings on the non-mirrored UI canvas. */
+function renderFormWarnings(deviations: DeviationEvent[]): void {
+  const w = uiCanvas.width;
+  const h = uiCanvas.height;
+
+  const startY = h * 0.85;
+  const lineHeight = 20;
+
+  for (let i = 0; i < Math.min(deviations.length, 3); i++) {
+    const dev = deviations[i];
+    if (!dev) continue;
+
+    const isCritical = dev.severity === 'critical';
+    const color = isCritical ? 'rgba(239, 68, 68, 0.95)' : 'rgba(251, 191, 36, 0.95)';
+    const icon = isCritical ? '🛑' : '⚠️';
+    const jointDisplay = dev.jointName.replace(/_/g, ' ');
+
+    uiCtx.font = 'bold 14px -apple-system, sans-serif';
+    uiCtx.fillStyle = color;
+    uiCtx.textAlign = 'center';
+    uiCtx.fillText(
+      `${icon} ${jointDisplay}: ${dev.angleValue.toFixed(0)}° — ${isCritical ? 'STOP!' : 'Check form'}`,
+      w / 2,
+      startY - i * lineHeight,
+    );
+  }
 }
 
 function activateTracking(): void {
@@ -184,71 +258,80 @@ function activateTracking(): void {
   });
 }
 
-/** Show a brief exercise animation and then a 3-2-1 countdown on the canvas. */
+/** Show exercise-specific tutorial and then a 3-2-1 countdown using DOM overlay. */
 async function showCountdown(seconds: number): Promise<void> {
-  const w = canvas.width;
-  const h = canvas.height;
+  countdownOverlay.style.display = 'flex';
 
-  // Phase 1: Brief exercise demonstration (show form guide frames)
-  const guideFrames = [
-    { text: '1. Stand tall, feet shoulder-width', emoji: '🧍' },
-    { text: '2. Brace core, push hips back', emoji: '🏋️' },
-    { text: '3. Lower until thighs parallel', emoji: '⬇️' },
-    { text: '4. Drive through heels to stand', emoji: '⬆️' },
-  ];
+  // Get exercise-specific steps from the catalog
+  const entry = getExerciseByName(selectedExerciseName);
+  const steps = entry?.steps ?? ['Get into starting position', 'Perform the movement', 'Return to start'];
+  const cameraAdvice = entry?.cameraAngle === 'side' ? '📷 Position camera to your SIDE'
+    : entry?.cameraAngle === 'front' ? '📷 Position camera in FRONT of you'
+    : '📷 Camera position: front or side';
+  const exerciseName = entry?.displayName ?? selectedExerciseName.replace(/_/g, ' ');
 
-  for (const frame of guideFrames) {
-    ctx.save();
-    // Semi-transparent background
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-    ctx.fillRect(0, 0, w, h);
+  // Phase 0: Camera angle advice
+  countdownOverlay.innerHTML = `
+    <div style="font-size:2.5rem;">📷</div>
+    <div style="font-size:1.2rem; font-weight:700; color:#00b894; margin-top:12px;">${cameraAdvice}</div>
+    <div style="font-size:0.9rem; color:#aaa; margin-top:8px;">for best tracking accuracy</div>
+  `;
+  await sleep(2000);
 
-    // Emoji
-    ctx.font = `${h * 0.15}px sans-serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(frame.emoji, w / 2, h * 0.35);
+  // Phase 1: Exercise-specific steps
+  const exerciseEmojis: Record<string, string[]> = {
+    barbell_squat: ['🧍', '🏋️', '⬇️', '⬆️'],
+    push_up: ['🧎', '⬇️', '💪', '⬆️'],
+    bicep_curl: ['🧍', '💪', '✊', '⬇️'],
+    shoulder_press: ['🧍', '🙌', '⬆️', '⬇️'],
+    lunge: ['🧍', '🚶', '⬇️', '⬆️'],
+    lateral_raise: ['🧍', '↔️', '🙌', '⬇️'],
+    calf_raise: ['🧍', '⬆️', '🦶', '⬇️'],
+    conventional_deadlift: ['🧍', '↙️', '🏗️', '⬆️'],
+    tricep_dip: ['💺', '⬇️', '💪', '⬆️'],
+    jumping_jack: ['🧍', '⭐', '🙌', '🧍'],
+    wall_sit: ['🧱', '⬇️', '🪑', '⏱️'],
+    glute_bridge: ['🛋️', '⬆️', '🍑', '⬇️'],
+    high_knees: ['🧍', '🦵', '🏃', '🔄'],
+    sit_up: ['🛋️', '⬆️', '🧘', '⬇️'],
+    overhead_tricep_extension: ['🙌', '⬇️', '🔱', '⬆️'],
+    bent_over_row: ['↙️', '⬇️', '🚣', '⬆️'],
+    pull_up: ['🧗', '⬆️', '💪', '⬇️'],
+    band_assisted_pull_up: ['🪢', '🧗', '⬆️', '⬇️'],
+    diamond_push_up: ['💎', '⬇️', '💪', '⬆️'],
+    wide_push_up: ['↔️', '⬇️', '💪', '⬆️'],
+    plank: ['🧎', '➡️', '🧘', '⏱️'],
+    mountain_climber: ['🧎', '🦵', '🏃', '🔄'],
+  };
 
-    // Instruction text
-    ctx.font = `bold ${Math.max(16, h * 0.04)}px -apple-system, sans-serif`;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillText(frame.text, w / 2, h * 0.6);
+  const emojis = exerciseEmojis[selectedExerciseName] ?? ['1️⃣', '2️⃣', '3️⃣', '4️⃣'];
 
-    ctx.restore();
-
-    await sleep(1200);
-    ctx.clearRect(0, 0, w, h);
+  for (let i = 0; i < steps.length; i++) {
+    const step = steps[i] ?? '';
+    const emoji = emojis[i] ?? '▶️';
+    countdownOverlay.innerHTML = `
+      <div style="font-size:3rem;">${emoji}</div>
+      <div style="font-size:0.85rem; color:#888; margin-top:8px;">${exerciseName} — Step ${i + 1}/${steps.length}</div>
+      <div style="font-size:1rem; font-weight:600; color:#fff; margin-top:8px; max-width:80%; text-align:center;">${step}</div>
+    `;
+    await sleep(1500);
   }
 
   // Phase 2: Countdown 3-2-1-GO
   for (let i = seconds; i >= 1; i--) {
-    ctx.save();
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.fillRect(0, 0, w, h);
-
-    ctx.font = `bold ${h * 0.3}px -apple-system, sans-serif`;
-    ctx.fillStyle = '#00b894';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(String(i), w / 2, h / 2);
-
-    ctx.restore();
+    countdownOverlay.innerHTML = `<div style="font-size:6rem; font-weight:bold; color:#00b894;">${i}</div>`;
     await sleep(1000);
-    ctx.clearRect(0, 0, w, h);
   }
 
   // "GO!" flash
-  ctx.save();
-  ctx.fillStyle = 'rgba(0, 184, 148, 0.8)';
-  ctx.fillRect(0, 0, w, h);
-  ctx.font = `bold ${h * 0.2}px -apple-system, sans-serif`;
-  ctx.fillStyle = '#ffffff';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText('GO!', w / 2, h / 2);
-  ctx.restore();
+  countdownOverlay.innerHTML = `<div style="font-size:4rem; font-weight:bold; color:#fff;">GO!</div>`;
+  countdownOverlay.style.background = 'rgba(0, 184, 148, 0.85)';
   await sleep(600);
-  ctx.clearRect(0, 0, w, h);
+
+  // Hide overlay
+  countdownOverlay.style.display = 'none';
+  countdownOverlay.style.background = 'rgba(0,0,0,0.75)';
+  countdownOverlay.innerHTML = '';
 }
 
 function sleep(ms: number): Promise<void> {
@@ -256,18 +339,212 @@ function sleep(ms: number): Promise<void> {
 }
 
 // ---------------------------------------------------------------------------
+// Routine Mode UI helpers
+// ---------------------------------------------------------------------------
+
+function renderRoutineList(): void {
+  const entries = routineMode.getEntries();
+  if (entries.length === 0) {
+    routineListEl.innerHTML = '<div style="color:#666; font-size:0.8rem; padding:4px 0;">No exercises added yet.</div>';
+    startRoutineBtn.disabled = true;
+    startRoutineBtn.style.opacity = '0.5';
+    return;
+  }
+
+  let html = '';
+  for (let i = 0; i < entries.length; i++) {
+    const entry = entries[i];
+    if (!entry) continue;
+    html += `<div class="routine-item">
+      <span class="routine-num">${i + 1}.</span>
+      <span class="routine-name">${entry.displayName}</span>
+      <span class="routine-reps-badge">${entry.targetReps} reps</span>
+      <button class="routine-remove" data-index="${i}" type="button">×</button>
+    </div>`;
+  }
+  routineListEl.innerHTML = html;
+
+  // Bind remove buttons
+  routineListEl.querySelectorAll('.routine-remove').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const idx = Number((btn as HTMLElement).dataset['index']);
+      routineMode.removeExercise(idx);
+      renderRoutineList();
+    });
+  });
+
+  startRoutineBtn.disabled = false;
+  startRoutineBtn.style.opacity = '1';
+}
+
+function updateRoutineProgress(index: number, total: number): void {
+  const pct = Math.round(((index) / total) * 100);
+  routineProgressBar.style.width = `${pct}%`;
+  const entry = routineMode.getCurrentEntry();
+  const name = entry ? entry.displayName : '';
+  routineProgressText.textContent = `Exercise ${index + 1} of ${total}: ${name}`;
+}
+
+function showTransitionFlash(exerciseName: string): void {
+  const flash = document.createElement('div');
+  flash.className = 'routine-transition-flash';
+  flash.innerHTML = `<span class="flash-label">Next Exercise</span><span class="flash-name">${exerciseName}</span>`;
+  videoContainer.appendChild(flash);
+  setTimeout(() => {
+    flash.remove();
+  }, 1800);
+}
+
+function reinitPipelineForRoutine(config: ExerciseFSMConfig): void {
+  // Reset core pipeline components for the new exercise
+  repCounter = new RepCounter(config);
+  formEvaluator = new FormEvaluator(config, (event) => {
+    safetyMonitor.onCriticalDeviation(event);
+  });
+  safetyMonitor = new SafetyMonitor(config, (event, alertType) => {
+    alertSystem.trigger(event, alertType);
+  });
+
+  // Reset pre-tracking for the new exercise
+  preTrackingController = new PreTrackingController({ canvas, config });
+
+  // We skip the pre-tracking on exercise change within a routine —
+  // the user is already positioned
+  preTrackingActive = false;
+
+  // Update UI
+  repCountEl.textContent = '0';
+  fsmStateEl.textContent = 'START';
+  lastTutEl.textContent = '—';
+}
+
+// ---------------------------------------------------------------------------
+// Routine Mode callbacks
+// ---------------------------------------------------------------------------
+
+routineMode.onExerciseAdvance((entry, index, total) => {
+  showTransitionFlash(entry.displayName);
+  reinitPipelineForRoutine(entry.config);
+  updateRoutineProgress(index, total);
+});
+
+routineMode.onRoutineComplete(() => {
+  isRunning = false;
+  if (animationFrameId !== null) {
+    cancelAnimationFrame(animationFrameId);
+    animationFrameId = null;
+  }
+  routineProgressBar.style.width = '100%';
+  routineProgressText.textContent = '🎉 Routine Complete!';
+  statusEl.textContent = '🎉 Routine Complete!';
+  startBtn.disabled = false;
+  stopBtn.disabled = true;
+  exerciseSelect.disabled = false;
+  startRoutineBtn.disabled = false;
+  startRoutineBtn.style.opacity = '1';
+
+  // Stop camera
+  const stream = video.srcObject as MediaStream | null;
+  stream?.getTracks().forEach((t) => t.stop());
+  video.srcObject = null;
+});
+
+// ---------------------------------------------------------------------------
+// Routine Mode button handlers
+// ---------------------------------------------------------------------------
+
+addToRoutineBtn.addEventListener('click', () => {
+  const exerciseName = routineExerciseAdd.value;
+  const reps = parseInt(routineRepsInput.value, 10) || 10;
+  routineMode.addExercise(exerciseName, reps);
+  renderRoutineList();
+});
+
+startRoutineBtn.addEventListener('click', async () => {
+  const firstEntry = routineMode.start();
+  if (!firstEntry) return;
+
+  // Disable UI
+  startBtn.disabled = true;
+  stopBtn.disabled = false;
+  exerciseSelect.disabled = true;
+  startRoutineBtn.disabled = true;
+  startRoutineBtn.style.opacity = '0.5';
+
+  try {
+    if (!poseLandmarker) await initMediaPipe();
+    await initCamera();
+
+    initPipeline(firstEntry.config);
+
+    // Show progress
+    routineProgressEl.style.display = '';
+    updateRoutineProgress(0, routineMode.getLength());
+
+    isRunning = true;
+    lastTimestamp = -1;
+    processFrame();
+  } catch (err) {
+    statusEl.textContent = `Error: ${err instanceof Error ? err.message : String(err)}`;
+    startBtn.disabled = false;
+    stopBtn.disabled = true;
+    startRoutineBtn.disabled = false;
+    startRoutineBtn.style.opacity = '1';
+  }
+});
+
+// Initial render
+renderRoutineList();
+
+// ---------------------------------------------------------------------------
+// Sensitivity sliders
+// ---------------------------------------------------------------------------
+
+sensitivitySlider.addEventListener('input', () => {
+  sensitivityValue.textContent = sensitivitySlider.value;
+});
+
+framingSlider.addEventListener('input', () => {
+  framingValue.textContent = framingSlider.value;
+});
+
+/**
+ * Get the current sensitivity factor (1=forgiving, 10=strict).
+ * Affects how wide the angle threshold windows are for FSM transitions.
+ * At level 5 (default), thresholds are used as-is.
+ * At level 1, windows expand by +20° each side.
+ * At level 10, windows contract by -10° each side.
+ */
+function getSensitivityExpansion(): number {
+  const level = parseInt(sensitivitySlider.value, 10);
+  // Level 1 = +20° expansion (very forgiving), level 10 = -10° contraction (strict)
+  return 20 - (level - 1) * (30 / 9); // ranges from +20 to -10
+}
+
+/**
+ * Get the minimum confidence for joint angle calculation based on framing slider.
+ * Level 1 = 0.5 (needs clear visibility), level 10 = 0.1 (works with anything)
+ */
+function getMinConfidence(): number {
+  const level = parseInt(framingSlider.value, 10);
+  return 0.5 - (level - 1) * (0.4 / 9); // ranges from 0.5 to 0.1
+}
+
+// ---------------------------------------------------------------------------
 // Frame loop
 // ---------------------------------------------------------------------------
 
 let lastTimestamp = -1;
+let timestampOffset = 0; // Monotonic offset to ensure MediaPipe never gets a backwards timestamp
 
 function processFrame(): void {
   if (!isRunning || !poseLandmarker) return;
 
   const now = performance.now();
 
-  // MediaPipe requires strictly increasing timestamps
-  const timestamp = video.currentTime * 1000;
+  // Use a monotonically increasing timestamp for MediaPipe
+  // This avoids the "Packet timestamp mismatch" error on stop/restart
+  const timestamp = timestampOffset + performance.now();
   if (timestamp <= lastTimestamp) {
     animationFrameId = requestAnimationFrame(processFrame);
     return;
@@ -278,6 +555,7 @@ function processFrame(): void {
 
   // Clear canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
+  uiCtx.clearRect(0, 0, uiCanvas.width, uiCanvas.height);
 
   if (result.landmarks && result.landmarks.length > 0) {
     const landmarks = result.landmarks[0]!;
@@ -332,12 +610,28 @@ function processFrame(): void {
     // Active tracking — feed to pipeline
     const prevReps = repCounter.getRepCount();
     repCounter.update(message);
-    formEvaluator.evaluateFrame(message);
+    const deviations = formEvaluator.evaluateFrame(message);
+
+    // Show form warnings on the UI canvas (non-mirrored, readable)
+    if (deviations.length > 0) {
+      renderFormWarnings(deviations);
+    }
 
     // Check if rep completed
     if (repCounter.getRepCount() > prevReps) {
       formEvaluator.setRepNumber(repCounter.getRepCount() + 1);
       alertSystem.dismiss();
+    }
+
+    // Routine auto-advance check
+    if (routineMode.isRoutineActive()) {
+      const advanced = routineMode.checkAdvance(repCounter.getRepCount());
+      if (advanced) {
+        // Pipeline was reinitialized or routine completed — skip rest of frame
+        updateFps(now);
+        animationFrameId = requestAnimationFrame(processFrame);
+        return;
+      }
     }
 
     // Update UI
@@ -412,7 +706,16 @@ startBtn.addEventListener('click', async () => {
   try {
     if (!poseLandmarker) await initMediaPipe();
     await initCamera();
-    initPipeline(squatConfig);
+
+    // Get selected exercise config
+    const selectedName = exerciseSelect.value;
+    const selectedConfig = allConfigs.find(c => c.exerciseName === selectedName) ?? allConfigs[0]!;
+    
+    selectedExerciseName = selectedName;
+    sessionStartTime = Date.now();
+
+    initPipeline(selectedConfig);
+    exerciseSelect.disabled = true;
     isRunning = true;
     lastTimestamp = -1;
     processFrame();
@@ -430,17 +733,54 @@ stopBtn.addEventListener('click', () => {
     animationFrameId = null;
   }
   alertSystem?.dismiss();
+
+  // Persist completed session to exercise log
+  const completedReps = repCounter.getCompletedReps();
+  if (completedReps.length > 0) {
+    const now = Date.now();
+    const durationMs = now - sessionStartTime;
+    const session: Session = {
+      id: crypto.randomUUID(),
+      startedAt: new Date(sessionStartTime),
+      endedAt: new Date(now),
+      durationMs,
+      routineId: 'demo',
+      sets: [{
+        setNumber: 1,
+        exerciseName: selectedExerciseName,
+        reps: completedReps,
+        actualTutMs: completedReps.reduce((s, r) => s + r.tutMs, 0),
+        expectedTutMs: 30000,
+        tutDeltaMs: completedReps.reduce((s, r) => s + r.tutMs, 0) - 30000,
+      }],
+    };
+    logStorage.persist(session).catch(() => {});
+    logPanel.addSession(session);
+  }
+
   preTrackingActive = true;
   preTrackingController = null;
   statusEl.textContent = 'Stopped. Click Start to resume.';
   startBtn.disabled = false;
   stopBtn.disabled = true;
   skipBtn.style.display = 'none';
+  exerciseSelect.disabled = false;
+
+  // Bump timestamp offset so next session never sends a backwards timestamp to MediaPipe
+  timestampOffset = lastTimestamp + 1000;
 
   // Show stat cards back
   statReps.style.display = '';
   statFsm.style.display = '';
   statTut.style.display = '';
+
+  // Reset routine mode if it was active
+  if (routineMode.isRoutineActive()) {
+    routineMode.stop();
+  }
+  routineProgressEl.style.display = 'none';
+  startRoutineBtn.disabled = routineMode.getLength() === 0;
+  startRoutineBtn.style.opacity = routineMode.getLength() === 0 ? '0.5' : '1';
 
   // Stop camera
   const stream = video.srcObject as MediaStream | null;

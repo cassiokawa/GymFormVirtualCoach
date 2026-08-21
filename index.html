@@ -11,18 +11,29 @@
     #status { margin-bottom: 16px; padding: 8px 16px; border-radius: 8px; background: #16213e; font-size: 0.9rem; }
     #video-container { position: relative; width: 640px; max-width: 100%; border-radius: 12px; overflow: hidden; background: #000; }
     video { width: 100%; display: block; transform: scaleX(-1); }
-    canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
+    canvas#overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
+    canvas#ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; /* NOT mirrored — for readable text */ }
     #controls { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
     button { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: transform 0.1s; }
     button:active { transform: scale(0.95); }
     #startBtn { background: #00b894; color: #fff; }
     #stopBtn { background: #d63031; color: #fff; }
+    #exerciseSelect { padding: 10px 14px; border-radius: 8px; border: 1px solid #333; background: #16213e; color: #eee; font-size: 0.95rem; cursor: pointer; }
     #stats { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; width: 640px; max-width: 100%; }
     .stat-card { background: #16213e; border-radius: 8px; padding: 16px; text-align: center; }
     .stat-card .value { font-size: 2rem; font-weight: bold; color: #00b894; }
     .stat-card .label { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
     #guide-container { margin-top: 20px; width: 640px; max-width: 100%; }
     .alert-overlay { font-size: 1.1rem !important; }
+    .routine-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 4px; background: #16213e; border-radius: 6px; font-size: 0.85rem; }
+    .routine-item .routine-num { color: #00b894; font-weight: 700; min-width: 20px; }
+    .routine-item .routine-name { flex: 1; }
+    .routine-item .routine-reps-badge { background: #00b894; color: #fff; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
+    .routine-item .routine-remove { background: none; border: none; color: #d63031; cursor: pointer; font-size: 1.1rem; padding: 0 4px; line-height: 1; }
+    .routine-transition-flash { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 184, 148, 0.85); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; z-index: 100; animation: flashFade 1.8s forwards; pointer-events: none; }
+    .routine-transition-flash .flash-label { font-size: 0.9rem; color: rgba(255,255,255,0.8); }
+    .routine-transition-flash .flash-name { font-size: 1.6rem; font-weight: 700; color: #fff; }
+    @keyframes flashFade { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
   </style>
 </head>
 <body>
@@ -31,11 +42,121 @@
   <div id="video-container">
     <video id="video" autoplay playsinline muted></video>
     <canvas id="overlay"></canvas>
+    <canvas id="ui-overlay"></canvas>
+    <div id="countdown-overlay" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:50;"></div>
   </div>
   <div id="controls">
-    <button id="startBtn">▶ Start Squat Tracking</button>
+    <select id="exerciseSelect">
+      <optgroup label="🦵 Legs">
+        <option value="barbell_squat">Barbell Squat</option>
+        <option value="lunge">Lunge</option>
+        <option value="calf_raise">Calf Raise</option>
+        <option value="wall_sit">Wall Sit</option>
+        <option value="glute_bridge">Glute Bridge</option>
+        <option value="high_knees">High Knees</option>
+      </optgroup>
+      <optgroup label="💪 Chest">
+        <option value="push_up">Push-Up</option>
+        <option value="diamond_push_up">Diamond Push-Up</option>
+        <option value="wide_push_up">Wide Push-Up</option>
+      </optgroup>
+      <optgroup label="🎯 Back">
+        <option value="pull_up">Pull-Up</option>
+        <option value="band_assisted_pull_up">Band-Assisted Pull-Up</option>
+        <option value="bent_over_row">Bent-Over Row</option>
+        <option value="conventional_deadlift">Deadlift</option>
+      </optgroup>
+      <optgroup label="🙌 Shoulders">
+        <option value="shoulder_press">Shoulder Press</option>
+        <option value="lateral_raise">Lateral Raise</option>
+        <option value="jumping_jack">Jumping Jack</option>
+      </optgroup>
+      <optgroup label="💪 Arms">
+        <option value="bicep_curl">Bicep Curl</option>
+        <option value="tricep_dip">Tricep Dip</option>
+        <option value="overhead_tricep_extension">Overhead Tricep</option>
+      </optgroup>
+      <optgroup label="🧘 Core">
+        <option value="sit_up">Sit-Up</option>
+        <option value="plank">Plank (hold)</option>
+        <option value="mountain_climber">Mountain Climber</option>
+      </optgroup>
+    </select>
+    <button id="startBtn">▶ Start</button>
     <button id="stopBtn" disabled>■ Stop</button>
     <button id="skipBtn" style="display:none;">⏭ Skip Lock</button>
+  </div>
+  <div id="routine-builder" style="margin-top:16px; width:640px; max-width:100%;">
+    <details>
+      <summary style="cursor:pointer; font-weight:600; color:#00b894;">⚙️ Sensitivity Settings</summary>
+      <div style="margin-top:8px; display:flex; flex-direction:column; gap:10px; padding:8px; background:#16213e; border-radius:8px;">
+        <label style="font-size:0.8rem; display:flex; align-items:center; gap:8px;">
+          <span style="min-width:140px;">Form Strictness:</span>
+          <input id="sensitivitySlider" type="range" min="1" max="10" value="5" style="flex:1;">
+          <span id="sensitivityValue" style="min-width:30px; text-align:right;">5</span>
+        </label>
+        <div style="font-size:0.7rem; color:#888;">1 = Very forgiving (easy reps) → 10 = Very strict (perfect form required)</div>
+        <label style="font-size:0.8rem; display:flex; align-items:center; gap:8px;">
+          <span style="min-width:140px;">Framing Tolerance:</span>
+          <input id="framingSlider" type="range" min="1" max="10" value="7" style="flex:1;">
+          <span id="framingValue" style="min-width:30px; text-align:right;">7</span>
+        </label>
+        <div style="font-size:0.7rem; color:#888;">1 = Needs full body visible → 10 = Works with partial body</div>
+      </div>
+    </details>
+  </div>
+  <div id="routine-builder-exercises" style="margin-top:12px; width:640px; max-width:100%;">
+    <details>
+      <summary style="cursor:pointer; font-weight:600; color:#00b894;">📋 Build a Routine</summary>
+      <div id="routine-list" style="margin-top:8px;"></div>
+      <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
+        <select id="routineExerciseAdd" style="padding:8px 10px; border-radius:6px; border:1px solid #333; background:#16213e; color:#eee; font-size:0.85rem;">
+          <optgroup label="🦵 Legs">
+            <option value="barbell_squat">Barbell Squat</option>
+            <option value="lunge">Lunge</option>
+            <option value="calf_raise">Calf Raise</option>
+            <option value="wall_sit">Wall Sit</option>
+            <option value="glute_bridge">Glute Bridge</option>
+            <option value="high_knees">High Knees</option>
+          </optgroup>
+          <optgroup label="💪 Chest">
+            <option value="push_up">Push-Up</option>
+            <option value="diamond_push_up">Diamond Push-Up</option>
+            <option value="wide_push_up">Wide Push-Up</option>
+          </optgroup>
+          <optgroup label="🎯 Back">
+            <option value="pull_up">Pull-Up</option>
+            <option value="band_assisted_pull_up">Band-Assisted Pull-Up</option>
+            <option value="bent_over_row">Bent-Over Row</option>
+            <option value="conventional_deadlift">Deadlift</option>
+          </optgroup>
+          <optgroup label="🙌 Shoulders">
+            <option value="shoulder_press">Shoulder Press</option>
+            <option value="lateral_raise">Lateral Raise</option>
+            <option value="jumping_jack">Jumping Jack</option>
+          </optgroup>
+          <optgroup label="💪 Arms">
+            <option value="bicep_curl">Bicep Curl</option>
+            <option value="tricep_dip">Tricep Dip</option>
+            <option value="overhead_tricep_extension">Overhead Tricep</option>
+          </optgroup>
+          <optgroup label="🧘 Core">
+            <option value="sit_up">Sit-Up</option>
+            <option value="plank">Plank (hold)</option>
+            <option value="mountain_climber">Mountain Climber</option>
+          </optgroup>
+        </select>
+        <input id="routineReps" type="number" min="1" max="50" value="10" placeholder="Reps" style="width:60px; padding:8px; border-radius:6px; border:1px solid #333; background:#16213e; color:#eee; font-size:0.85rem;">
+        <button id="addToRoutine" type="button" style="padding:8px 14px; border-radius:6px; border:none; background:#00b894; color:#fff; font-weight:600; cursor:pointer; font-size:0.85rem;">+ Add</button>
+      </div>
+      <button id="startRoutineBtn" type="button" disabled style="margin-top:12px; width:100%; padding:10px; border-radius:8px; border:none; background:#00b894; color:#fff; font-weight:600; cursor:pointer; font-size:0.95rem; opacity:0.5;">▶ Start Routine</button>
+    </details>
+  </div>
+  <div id="routine-progress" style="display:none; margin-top:12px; width:640px; max-width:100%;">
+    <div id="routine-progress-text" style="font-size:0.85rem; margin-bottom:4px; color:#aaa;"></div>
+    <div style="background:#16213e; border-radius:8px; height:8px; overflow:hidden;">
+      <div id="routine-progress-bar" style="background:#00b894; height:100%; width:0%; transition:width 0.3s;"></div>
+    </div>
   </div>
   <div id="stats">
     <div class="stat-card" id="statReps"><div class="value" id="repCount">0</div><div class="label">Reps</div></div>
@@ -44,6 +165,7 @@
     <div class="stat-card" id="statTut"><div class="value" id="lastTut">—</div><div class="label">Last TUT (ms)</div></div>
   </div>
   <div id="guide-container"></div>
+  <div id="log-container"></div>
   <script type="module" src="/src/demo/main.ts"></script>
 </body>
 </html>
