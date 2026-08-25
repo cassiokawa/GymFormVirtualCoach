@@ -18,6 +18,16 @@ import { EXERCISE_CATALOG, getExerciseByName } from '../config/exerciseCatalog.j
 import { RoutineMode } from './routineMode.js';
 import { Storage } from '../storage/Storage.js';
 import { ExerciseLogPanel } from '../exerciseLog/ExerciseLogPanel.js';
+import { InsightsPanel } from '../insights/InsightsPanel.js';
+// --- Algorithm Lab (isolated research mode) ---
+import { ModelRegistry } from '../lab/registry/ModelRegistry.js';
+import { registerBuiltInAdapters } from '../lab/registry/adapters/index.js';
+import { PoseWorkerPool } from '../lab/workers/PoseWorkerPool.js';
+import { BenchmarkRunner } from '../lab/benchmark/BenchmarkRunner.js';
+import { Recommender } from '../lab/compare/Recommender.js';
+import { ResultStore } from '../lab/store/ResultStore.js';
+import { AlgorithmLab } from '../lab/AlgorithmLab.js';
+import { LabModePanel } from '../lab/ui/LabModePanel.js';
 
 // ---------------------------------------------------------------------------
 // DOM elements
@@ -43,6 +53,14 @@ const fsmStateEl = document.getElementById('fsmState')!;
 const fpsEl = document.getElementById('fps')!;
 const lastTutEl = document.getElementById('lastTut')!;
 const videoContainer = document.getElementById('video-container')!;
+
+// On-video HUD (always visible during active tracking)
+const hud = document.getElementById('hud')!;
+const hudReps = document.getElementById('hudReps')!;
+const hudPhase = document.getElementById('hudPhase')!;
+const hudFps = document.getElementById('hudFps')!;
+const hudTut = document.getElementById('hudTut')!;
+const hudRepChip = hud.querySelector('.hud-rep') as HTMLElement | null;
 
 // Stat cards that are hidden during pre-tracking
 const statReps = document.getElementById('statReps')!;
@@ -95,10 +113,102 @@ const logStorage = Storage.getInstance();
 logStorage.open().catch(() => { /* IndexedDB might not be available in all envs */ });
 const logPanel = new ExerciseLogPanel(logStorage);
 logPanel.mount(document.getElementById('log-container')!);
+const insightsPanel = new InsightsPanel(logStorage);
+insightsPanel.mount(document.getElementById('log-container')!);
 
 // Track the exercise name and start time for session logging
 let selectedExerciseName = '';
 let sessionStartTime = 0;
+
+// ---------------------------------------------------------------------------
+// Algorithm Lab wiring (isolated research mode)
+//
+// When `labActive` is true the frame loop skips the live workout pipeline so
+// lab inference does not contend with RepCounter/FormEvaluator (Req 10.2). The
+// lab defaults to inactive so existing behavior is unchanged.
+// ---------------------------------------------------------------------------
+
+let labActive = false;
+
+const labRegistry = new ModelRegistry();
+registerBuiltInAdapters(labRegistry);
+const labPool = new PoseWorkerPool();
+const labStore = new ResultStore();
+labStore.open().catch(() => { /* IndexedDB might not be available in all envs */ });
+const algorithmLab = new AlgorithmLab({
+  registry: labRegistry,
+  pool: labPool,
+  runner: new BenchmarkRunner(labPool, labRegistry),
+  recommender: new Recommender(),
+  store: labStore,
+});
+const labPanel = new LabModePanel(algorithmLab, labRegistry);
+const labContainer = document.createElement('div');
+labContainer.id = 'lab-container';
+document.getElementById('log-container')!.insertAdjacentElement('afterend', labContainer);
+labPanel.mount(labContainer);
+// Keep the module-level `labActive` guard in sync with the orchestrator.
+labActive = algorithmLab.isActive();
+
+const labToggleBtn = document.getElementById('labToggleBtn') as HTMLButtonElement;
+
+/**
+ * Capture `count` frames from the live <video> element into ImageBitmaps for a
+ * benchmark run. Requires the camera to be active.
+ */
+async function captureBenchmarkFrames(count: number): Promise<ImageBitmap[]> {
+  const frames: ImageBitmap[] = [];
+  for (let i = 0; i < count; i++) {
+    // createImageBitmap on the video grabs the current displayed frame.
+    const bitmap = await createImageBitmap(video);
+    frames.push(bitmap);
+    // Small delay so successive frames differ slightly (~30fps cadence).
+    await sleep(33);
+  }
+  return frames;
+}
+
+// The panel's Benchmark button runs a real benchmark for the selected model
+// using frames captured live from the webcam.
+labPanel.setBenchmarkRunner(async () => {
+  if (video.srcObject === null) {
+    await initCamera();
+  }
+  labPanel.setStatus('Capturing frames…');
+  const frames = await captureBenchmarkFrames(120);
+  labPanel.setStatus('Running inference…');
+  await algorithmLab.startBenchmark({ frames, warmupFrames: 5 });
+});
+
+labToggleBtn.addEventListener('click', async () => {
+  if (algorithmLab.isActive()) {
+    algorithmLab.deactivate();
+    labActive = false;
+    labToggleBtn.textContent = '🔬 Lab Mode';
+    labToggleBtn.style.background = '#6c5ce7';
+    statusEl.textContent = 'Lab Mode off.';
+    return;
+  }
+  try {
+    // Stop any live workout session so the lab owns the camera exclusively.
+    isRunning = false;
+    if (animationFrameId !== null) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+    algorithmLab.activate();
+    labActive = true;
+    hud.classList.remove('visible');
+    labToggleBtn.textContent = '✖ Exit Lab';
+    labToggleBtn.style.background = '#d63031';
+    if (video.srcObject === null) {
+      await initCamera();
+    }
+    statusEl.textContent = 'Lab Mode active. Pick a model and click Benchmark.';
+  } catch (err) {
+    statusEl.textContent = `Lab Mode error: ${err instanceof Error ? err.message : String(err)}`;
+  }
+});
 
 // ---------------------------------------------------------------------------
 // Initialization
@@ -253,6 +363,13 @@ function activateTracking(): void {
 
     // Hide skip button
     skipBtn.style.display = 'none';
+
+    // Reveal the on-video HUD and reset it.
+    hudReps.textContent = '0';
+    hudPhase.textContent = 'READY';
+    hudFps.textContent = '0';
+    hudTut.textContent = '—';
+    hud.classList.add('visible');
 
     statusEl.textContent = 'Tracking active. Counting reps...';
   });
@@ -436,6 +553,7 @@ routineMode.onRoutineComplete(() => {
   }
   routineProgressBar.style.width = '100%';
   routineProgressText.textContent = '🎉 Routine Complete!';
+  hud.classList.remove('visible');
   statusEl.textContent = '🎉 Routine Complete!';
   startBtn.disabled = false;
   stopBtn.disabled = true;
@@ -540,6 +658,15 @@ let timestampOffset = 0; // Monotonic offset to ensure MediaPipe never gets a ba
 function processFrame(): void {
   if (!isRunning || !poseLandmarker) return;
 
+  // Lab-mode guard (Req 10.2): when the Algorithm Lab is active, frames are
+  // owned by the lab's worker pool, so skip the live workout pipeline
+  // (RepCounter/FormEvaluator/pre-tracking) entirely. Keep the animation loop
+  // alive so the lab can continue to receive frames.
+  if (labActive) {
+    animationFrameId = requestAnimationFrame(processFrame);
+    return;
+  }
+
   const now = performance.now();
 
   // Use a monotonically increasing timestamp for MediaPipe
@@ -635,11 +762,25 @@ function processFrame(): void {
     }
 
     // Update UI
-    repCountEl.textContent = String(repCounter.getRepCount());
-    fsmStateEl.textContent = repCounter.getState();
+    const repCountNow = repCounter.getRepCount();
+    const fsmStateNow = repCounter.getState();
+    repCountEl.textContent = String(repCountNow);
+    fsmStateEl.textContent = fsmStateNow;
+
+    // Mirror to the always-visible on-video HUD.
+    hudReps.textContent = String(repCountNow);
+    hudPhase.textContent = fsmStateNow;
+    if (repCountNow > prevReps && hudRepChip !== null) {
+      hudRepChip.classList.remove('pulse');
+      // Force reflow so the animation can retrigger on consecutive reps.
+      void hudRepChip.offsetWidth;
+      hudRepChip.classList.add('pulse');
+    }
     const tut = repCounter.getLastRepTutMs();
     if (tut !== null) {
-      lastTutEl.textContent = String(Math.round(tut));
+      const tutRounded = String(Math.round(tut));
+      lastTutEl.textContent = tutRounded;
+      hudTut.textContent = tutRounded;
     }
   }
 
@@ -651,7 +792,9 @@ function updateFps(now: number): void {
   frameCount++;
   if (now - lastFpsUpdate > 1000) {
     const fps = Math.round((frameCount * 1000) / (now - lastFpsUpdate));
-    fpsEl.textContent = String(fps);
+    const fpsStr = String(fps);
+    fpsEl.textContent = fpsStr;
+    hudFps.textContent = fpsStr;
     frameCount = 0;
     lastFpsUpdate = now;
   }
@@ -756,10 +899,12 @@ stopBtn.addEventListener('click', () => {
     };
     logStorage.persist(session).catch(() => {});
     logPanel.addSession(session);
+    insightsPanel.addSession(session);
   }
 
   preTrackingActive = true;
   preTrackingController = null;
+  hud.classList.remove('visible');
   statusEl.textContent = 'Stopped. Click Start to resume.';
   startBtn.disabled = false;
   stopBtn.disabled = true;

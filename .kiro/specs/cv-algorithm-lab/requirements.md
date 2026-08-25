@@ -141,3 +141,55 @@ The CV Algorithm Lab is an in-browser development and benchmarking tool that ena
 3. WHEN the user deactivates Lab Mode, THE Algorithm_Lab SHALL restore the previously active model and resume normal application operation within 500 ms.
 4. THE Algorithm_Lab SHALL display real-time FPS and latency indicators while a model is actively processing frames in Lab Mode.
 5. WHEN benchmark results are available for multiple models, THE Algorithm_Lab SHALL display the algorithm explanation and recommendation panel alongside the results dashboard.
+
+### Requirement 11: Exercise Form Quality Assessment Models
+
+**User Story:** As a developer, I want to load specialized ML models that score exercise form quality from skeleton sequences, so that the system can detect subtle form errors beyond what rule-based angle thresholds can identify.
+
+#### Acceptance Criteria
+
+1. THE Algorithm_Lab SHALL support loading Form_Quality_Models that accept a temporal sequence of normalized keypoints (minimum 30 frames) and output a form quality score between 0 and 1, plus an array of detected error labels.
+2. THE Algorithm_Lab SHALL support at minimum two architecture types for form assessment: (a) ST-GCN (Spatial-Temporal Graph Convolutional Network) for capturing joint-relationship patterns, and (b) Transformer-based skeleton encoders for long-range temporal dependencies.
+3. WHEN a Form_Quality_Model produces an error detection with confidence above 0.6, THE Algorithm_Lab SHALL emit a structured FormDeviation event containing the error label, affected joint indices, severity score, and suggested correction text.
+4. THE Algorithm_Lab SHALL support loading Form_Quality_Models in ONNX format via ONNX Runtime Web, executing inference within a Web Worker.
+5. WHEN ground-truth form annotations are available, THE Benchmark_Runner SHALL compute form assessment accuracy (correct error detection rate) and false positive rate for each Form_Quality_Model.
+6. THE Algorithm_Lab SHALL include at least one pre-bundled form quality model trained on the Fitness-AQA dataset (covering BackSquat, BarbellRow, and OverheadPress error detection).
+
+### Requirement 12: Training Data Collection Pipeline
+
+**User Story:** As a developer, I want to record keypoint sequences during workouts and export them as labeled training datasets, so that I can train custom exercise-specific models.
+
+#### Acceptance Criteria
+
+1. WHEN the user enables recording mode, THE Algorithm_Lab SHALL capture normalized Keypoint[] arrays for every processed frame along with timestamps and the currently selected exercise label.
+2. THE Algorithm_Lab SHALL support labeling recorded sequences with: exercise name, rep boundaries (start/end frame indices), form quality rating (1-5 scale), and optional error annotations per frame.
+3. WHEN the user exports a recording session, THE Algorithm_Lab SHALL produce a JSON file conforming to a documented schema containing: metadata (exercise, duration, model used), frame-level keypoints, and all applied labels.
+4. THE Algorithm_Lab SHALL persist recorded sequences to IndexedDB via the Result_Store, supporting at least 10 minutes of continuous recording at 30 FPS (approximately 18,000 frames).
+5. THE Algorithm_Lab SHALL support importing previously exported JSON datasets for re-labeling or merging with new recordings.
+6. THE Result_Store SHALL support querying recorded sequences by exercise name, date range, and quality rating.
+
+### Requirement 13: Custom Model Training and Loading
+
+**User Story:** As a developer, I want to train lightweight exercise-specific classifier models from collected keypoint data and load them back into the lab, so that I can iterate on model accuracy for my specific exercises.
+
+#### Acceptance Criteria
+
+1. THE Algorithm_Lab SHALL support an in-browser training workflow using TensorFlow.js that trains a lightweight MLP or LSTM classifier on collected keypoint sequence data.
+2. WHEN training is initiated, THE Algorithm_Lab SHALL display training progress (epoch, loss, validation accuracy) in real-time and execute training within a Web Worker to avoid blocking the UI.
+3. WHEN training completes, THE Algorithm_Lab SHALL export the trained model in both TFJS LayersModel format and ONNX format, storing both in IndexedDB.
+4. THE Algorithm_Lab SHALL support loading user-trained models into the Model_Registry as custom Pose_Adapters or Exercise_Classifiers, making them available for benchmarking alongside pre-built models.
+5. THE Algorithm_Lab SHALL provide configurable hyperparameters for training: learning rate, batch size, number of epochs, window size, and train/validation split ratio.
+6. WHEN a user-trained model is loaded, THE Algorithm_Lab SHALL display its training metadata (dataset size, final accuracy, exercise coverage) alongside the model in the registry.
+
+### Requirement 14: Pre-trained Exercise Adapter Registry
+
+**User Story:** As a developer, I want access to a registry of pre-trained exercise-specific adapters that can be downloaded and used immediately for improved recognition, so that I don't have to train models from scratch.
+
+#### Acceptance Criteria
+
+1. THE Algorithm_Lab SHALL maintain a catalog of downloadable pre-trained adapters including: (a) RepNet-style repetition counter (class-agnostic), (b) Exercise classifier (squat, push-up, shoulder press, bicep curl via LSTM), (c) Form quality assessor (ST-GCN on Fitness-AQA), and (d) DTW-based exercise matcher using reference templates.
+2. WHEN the user selects a pre-trained adapter from the catalog, THE Algorithm_Lab SHALL download the model weights (ONNX or TFJS format) and register the adapter in the Model_Registry within 30 seconds on a standard broadband connection.
+3. THE Algorithm_Lab SHALL display each pre-trained adapter's metadata: model size (MB), supported exercises, expected accuracy, input requirements (window size, keypoint format), and license information.
+4. WHEN a pre-trained adapter is loaded, THE Algorithm_Lab SHALL validate that the adapter's input schema matches the current keypoint normalization output before enabling inference.
+5. THE Algorithm_Lab SHALL support versioning of pre-trained adapters and notify the user when a newer version is available in the catalog.
+6. THE Algorithm_Lab SHALL support sideloading custom ONNX or TFJS models from the user's filesystem, registering them as adapters with user-provided metadata.

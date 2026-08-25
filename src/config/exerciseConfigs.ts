@@ -60,7 +60,40 @@ export function validateFSMConfig(config: ExerciseFSMConfig): boolean {
     return false;
   }
 
+  // Rep-based exercises must have pairwise-disjoint transition ranges so a
+  // single joint angle cannot satisfy two states at once (overlaps cause jitter
+  // to double-count). Isometric holds (plank, wall sit, calf raise) are
+  // duration-based, not rep-cycle based, so they are exempt.
+  if (!ISOMETRIC_HOLDS.has(config.exerciseName) && !transitionRangesDisjoint(config)) {
+    return false;
+  }
+
   return true;
+}
+
+/** Exercises measured by hold duration, not by a 3-phase rep cycle. */
+export const ISOMETRIC_HOLDS: ReadonlySet<string> = new Set([
+  'plank',
+  'wall_sit',
+  'calf_raise',
+]);
+
+/** Returns true when two inclusive ranges do not overlap. */
+function disjoint(a: AngleThreshold, b: AngleThreshold): boolean {
+  return a.max < b.min || b.max < a.min;
+}
+
+/**
+ * Returns true when the START, INFLECTION, and COMPLETE transition ranges are
+ * pairwise disjoint. Warning/critical ranges are intentionally allowed to
+ * overlap the transition ranges — they describe form safety, not FSM states.
+ */
+export function transitionRangesDisjoint(config: ExerciseFSMConfig): boolean {
+  return (
+    disjoint(config.startThreshold, config.inflectionThreshold) &&
+    disjoint(config.inflectionThreshold, config.completeThreshold) &&
+    disjoint(config.startThreshold, config.completeThreshold)
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -77,12 +110,16 @@ export function validateFSMConfig(config: ExerciseFSMConfig): boolean {
  */
 export const squatConfig: ExerciseFSMConfig = {
   exerciseName: 'barbell_squat',
-  joints: ['left_knee', 'right_knee', 'left_hip', 'right_hip'],
-  startThreshold:      { min: 140, max: 180 }, // standing upright
-  inflectionThreshold: { min: 70,  max: 145 }, // mid-descent
-  completeThreshold:   { min: 40,  max: 110 }, // bottom position
-  warningThreshold:    { min: 50,  max: 175 }, // safe zone: 50–175°. Below 50° = too deep. Above 175° = hyperextension
-  criticalThreshold:   { min: 35,  max: 180 }, // critical: below 35° = dangerous over-depth
+  // Knees only: the knee angle has the largest, cleanest range of motion in a
+  // squat. Tracking hips too polluted the majority vote and double-counted.
+  joints: ['left_knee', 'right_knee'],
+  // Disjoint ranges with gaps so a single knee angle can never satisfy two
+  // states at once (prevents jitter near shared boundaries from double-counting).
+  startThreshold:      { min: 155, max: 180 }, // standing upright (knee near-straight)
+  inflectionThreshold: { min: 105, max: 145 }, // mid-descent (must pass through)
+  completeThreshold:   { min: 40,  max: 95  }, // bottom of squat (deeply bent)
+  warningThreshold:    { min: 50,  max: 175 },
+  criticalThreshold:   { min: 35,  max: 180 },
 };
 
 /**
@@ -90,12 +127,16 @@ export const squatConfig: ExerciseFSMConfig = {
  */
 export const deadliftConfig: ExerciseFSMConfig = {
   exerciseName: 'conventional_deadlift',
-  joints: ['left_hip', 'right_hip', 'left_knee', 'right_knee'],
-  startThreshold:      { min: 140, max: 180 },
-  inflectionThreshold: { min: 80,  max: 145 },
-  completeThreshold:   { min: 50,  max: 100 },
-  warningThreshold:    { min: 45,  max: 175 }, // safe zone: below 45° hip = rounding back risk
-  criticalThreshold:   { min: 30,  max: 180 }, // critical: extreme hip flexion
+  // Hips only: a deadlift is a hip hinge — the knees stay nearly straight the
+  // whole rep, so including them made the majority vote flip constantly and
+  // produced huge overcounts. The hip angle is the true rep signal.
+  joints: ['left_hip', 'right_hip'],
+  // Disjoint ranges with gaps. Standing hip ~160-180; bottom of hinge ~60-100.
+  startThreshold:      { min: 150, max: 180 }, // lockout / standing tall
+  inflectionThreshold: { min: 105, max: 140 }, // mid-hinge (must pass through)
+  completeThreshold:   { min: 45,  max: 95  }, // bottom of hinge (deep hip flexion)
+  warningThreshold:    { min: 45,  max: 175 },
+  criticalThreshold:   { min: 30,  max: 180 },
 };
 
 // ---------------------------------------------------------------------------
@@ -105,9 +146,9 @@ export const deadliftConfig: ExerciseFSMConfig = {
 export const pushupConfig: ExerciseFSMConfig = {
   exerciseName: 'push_up',
   joints: ['left_elbow', 'right_elbow'],
-  startThreshold:      { min: 150, max: 180 }, // arms extended
-  inflectionThreshold: { min: 80,  max: 155 }, // lowering
-  completeThreshold:   { min: 50,  max: 100 }, // bottom
+  startThreshold:      { min: 150, max: 180 },
+  inflectionThreshold: { min: 95, max: 140 },
+  completeThreshold:   { min: 40, max: 85 },
   warningThreshold:    { min: 45,  max: 175 }, // safe zone: below 45° = too deep. Above 175° = hyperextension
   criticalThreshold:   { min: 30,  max: 180 }, // critical: extreme depth = shoulder injury risk
 };
@@ -119,9 +160,9 @@ export const pushupConfig: ExerciseFSMConfig = {
 export const bicepCurlConfig: ExerciseFSMConfig = {
   exerciseName: 'bicep_curl',
   joints: ['left_elbow', 'right_elbow'],
-  startThreshold:      { min: 150, max: 180 }, // arms straight
-  inflectionThreshold: { min: 70,  max: 155 }, // curling up
-  completeThreshold:   { min: 30,  max: 80  }, // fully flexed
+  startThreshold:      { min: 150, max: 180 },
+  inflectionThreshold: { min: 95, max: 140 },
+  completeThreshold:   { min: 30, max: 80 },
   warningThreshold:    { min: 20,  max: 170 }, // safe zone: below 20° = over-curl. Above 170° = not curling
   criticalThreshold:   { min: 10,  max: 180 }, // critical: extreme flexion
 };
@@ -132,10 +173,13 @@ export const bicepCurlConfig: ExerciseFSMConfig = {
 
 export const shoulderPressConfig: ExerciseFSMConfig = {
   exerciseName: 'shoulder_press',
-  joints: ['left_elbow', 'right_elbow', 'left_shoulder', 'right_shoulder'],
-  startThreshold:      { min: 60,  max: 100 }, // elbows bent at shoulders
-  inflectionThreshold: { min: 100, max: 155 }, // pressing up
-  completeThreshold:   { min: 150, max: 180 }, // arms locked out
+  // Elbows only: the elbow angle (bent at the shoulders -> locked out overhead)
+  // is the cleanest single signal. Mixing in shoulder angle, which follows a
+  // different motion profile, prevented the FSM from cycling.
+  joints: ['left_elbow', 'right_elbow'],
+  startThreshold:      { min: 55, max: 95 },
+  inflectionThreshold: { min: 110, max: 140 },
+  completeThreshold:   { min: 150, max: 180 },
   warningThreshold:    { min: 40,  max: 175 }, // safe zone: below 40° = too much back arch. Above 175° = hyperextension
   criticalThreshold:   { min: 25,  max: 180 }, // critical: extreme positions
 };
@@ -147,9 +191,9 @@ export const shoulderPressConfig: ExerciseFSMConfig = {
 export const lungeConfig: ExerciseFSMConfig = {
   exerciseName: 'lunge',
   joints: ['left_knee', 'right_knee', 'left_hip', 'right_hip'],
-  startThreshold:      { min: 150, max: 180 }, // standing upright
-  inflectionThreshold: { min: 80,  max: 155 }, // stepping down
-  completeThreshold:   { min: 50,  max: 100 }, // front knee at ~90°
+  startThreshold:      { min: 150, max: 180 },
+  inflectionThreshold: { min: 105, max: 145 },
+  completeThreshold:   { min: 50, max: 95 },
   warningThreshold:    { min: 45,  max: 175 }, // safe zone: below 45° = knee too far forward / too deep
   criticalThreshold:   { min: 30,  max: 180 }, // critical: extreme depth
 };
@@ -161,9 +205,9 @@ export const lungeConfig: ExerciseFSMConfig = {
 export const lateralRaiseConfig: ExerciseFSMConfig = {
   exerciseName: 'lateral_raise',
   joints: ['left_shoulder', 'right_shoulder'],
-  startThreshold:      { min: 10,  max: 40  }, // arms at sides
-  inflectionThreshold: { min: 40,  max: 80  }, // raising
-  completeThreshold:   { min: 75,  max: 120 }, // arms parallel (~90°)
+  startThreshold:      { min: 10, max: 35 },
+  inflectionThreshold: { min: 45, max: 70 },
+  completeThreshold:   { min: 80, max: 120 },
   warningThreshold:    { min: 5,   max: 110 }, // safe zone: above 110° = shoulder impingement risk
   criticalThreshold:   { min: 0,   max: 130 }, // critical: above 130° = definite impingement
 };
@@ -190,8 +234,8 @@ export const tricepDipConfig: ExerciseFSMConfig = {
   exerciseName: 'tricep_dip',
   joints: ['left_elbow', 'right_elbow'],
   startThreshold:      { min: 150, max: 180 },
-  inflectionThreshold: { min: 80,  max: 155 },
-  completeThreshold:   { min: 50,  max: 100 },
+  inflectionThreshold: { min: 105, max: 145 },
+  completeThreshold:   { min: 45, max: 95 },
   warningThreshold:    { min: 40,  max: 175 },
   criticalThreshold:   { min: 25,  max: 180 },
 };
@@ -203,9 +247,9 @@ export const tricepDipConfig: ExerciseFSMConfig = {
 export const jumpingJackConfig: ExerciseFSMConfig = {
   exerciseName: 'jumping_jack',
   joints: ['left_shoulder', 'right_shoulder'],
-  startThreshold:      { min: 5,   max: 35  },
-  inflectionThreshold: { min: 35,  max: 90  },
-  completeThreshold:   { min: 85,  max: 160 },
+  startThreshold:      { min: 5, max: 30 },
+  inflectionThreshold: { min: 40, max: 75 },
+  completeThreshold:   { min: 90, max: 160 },
   warningThreshold:    { min: 0,   max: 170 },
   criticalThreshold:   { min: 0,   max: 180 },
 };
@@ -230,10 +274,11 @@ export const wallSitConfig: ExerciseFSMConfig = {
 
 export const gluteBridgeConfig: ExerciseFSMConfig = {
   exerciseName: 'glute_bridge',
-  joints: ['left_hip', 'right_hip', 'left_knee', 'right_knee'],
-  startThreshold:      { min: 60,  max: 100 },
-  inflectionThreshold: { min: 100, max: 145 },
-  completeThreshold:   { min: 140, max: 180 },
+  // Hips only: hip extension (lying flat -> bridged up) is the whole movement.
+  joints: ['left_hip', 'right_hip'],
+  startThreshold:      { min: 55, max: 90 },
+  inflectionThreshold: { min: 105, max: 135 },
+  completeThreshold:   { min: 145, max: 180 },
   warningThreshold:    { min: 40,  max: 180 },
   criticalThreshold:   { min: 30,  max: 180 },
 };
@@ -245,9 +290,9 @@ export const gluteBridgeConfig: ExerciseFSMConfig = {
 export const highKneesConfig: ExerciseFSMConfig = {
   exerciseName: 'high_knees',
   joints: ['left_hip', 'right_hip'],
-  startThreshold:      { min: 140, max: 180 },
-  inflectionThreshold: { min: 80,  max: 145 },
-  completeThreshold:   { min: 50,  max: 95  },
+  startThreshold:      { min: 150, max: 180 },
+  inflectionThreshold: { min: 105, max: 140 },
+  completeThreshold:   { min: 50, max: 95 },
   warningThreshold:    { min: 30,  max: 180 },
   criticalThreshold:   { min: 20,  max: 180 },
 };
@@ -260,8 +305,8 @@ export const sitUpConfig: ExerciseFSMConfig = {
   exerciseName: 'sit_up',
   joints: ['left_hip', 'right_hip'],
   startThreshold:      { min: 120, max: 180 },
-  inflectionThreshold: { min: 70,  max: 125 },
-  completeThreshold:   { min: 40,  max: 80  },
+  inflectionThreshold: { min: 85, max: 110 },
+  completeThreshold:   { min: 40, max: 80 },
   warningThreshold:    { min: 25,  max: 180 },
   criticalThreshold:   { min: 15,  max: 180 },
 };
@@ -274,8 +319,8 @@ export const overheadTricepConfig: ExerciseFSMConfig = {
   exerciseName: 'overhead_tricep_extension',
   joints: ['left_elbow', 'right_elbow'],
   startThreshold:      { min: 140, max: 180 },
-  inflectionThreshold: { min: 60,  max: 145 },
-  completeThreshold:   { min: 30,  max: 70  },
+  inflectionThreshold: { min: 85, max: 130 },
+  completeThreshold:   { min: 30, max: 75 },
   warningThreshold:    { min: 20,  max: 175 },
   criticalThreshold:   { min: 10,  max: 180 },
 };
@@ -288,8 +333,8 @@ export const bentOverRowConfig: ExerciseFSMConfig = {
   exerciseName: 'bent_over_row',
   joints: ['left_elbow', 'right_elbow'],
   startThreshold:      { min: 140, max: 180 },
-  inflectionThreshold: { min: 80,  max: 145 },
-  completeThreshold:   { min: 40,  max: 90  },
+  inflectionThreshold: { min: 100, max: 135 },
+  completeThreshold:   { min: 40, max: 90 },
   warningThreshold:    { min: 25,  max: 175 },
   criticalThreshold:   { min: 15,  max: 180 },
 };
@@ -301,9 +346,9 @@ export const bentOverRowConfig: ExerciseFSMConfig = {
 export const pullUpConfig: ExerciseFSMConfig = {
   exerciseName: 'pull_up',
   joints: ['left_elbow', 'right_elbow'],
-  startThreshold:      { min: 150, max: 180 }, // arms extended (hanging)
-  inflectionThreshold: { min: 80,  max: 155 }, // pulling up
-  completeThreshold:   { min: 40,  max: 90  }, // chin over bar (elbows fully bent)
+  startThreshold:      { min: 150, max: 180 },
+  inflectionThreshold: { min: 100, max: 140 },
+  completeThreshold:   { min: 40, max: 90 },
   warningThreshold:    { min: 25,  max: 175 }, // too extreme
   criticalThreshold:   { min: 15,  max: 180 }, // dangerous position
 };
@@ -315,9 +360,9 @@ export const pullUpConfig: ExerciseFSMConfig = {
 export const bandPullUpConfig: ExerciseFSMConfig = {
   exerciseName: 'band_assisted_pull_up',
   joints: ['left_elbow', 'right_elbow'],
-  startThreshold:      { min: 145, max: 180 }, // slightly more forgiving (band helps)
-  inflectionThreshold: { min: 75,  max: 155 }, // wider window (band makes middle easier)
-  completeThreshold:   { min: 35,  max: 95  }, // wider at top
+  startThreshold:      { min: 145, max: 180 },
+  inflectionThreshold: { min: 100, max: 140 },
+  completeThreshold:   { min: 35, max: 90 },
   warningThreshold:    { min: 20,  max: 175 },
   criticalThreshold:   { min: 10,  max: 180 },
 };
@@ -330,8 +375,8 @@ export const diamondPushupConfig: ExerciseFSMConfig = {
   exerciseName: 'diamond_push_up',
   joints: ['left_elbow', 'right_elbow'],
   startThreshold:      { min: 150, max: 180 },
-  inflectionThreshold: { min: 70,  max: 155 },
-  completeThreshold:   { min: 40,  max: 85  },
+  inflectionThreshold: { min: 95, max: 140 },
+  completeThreshold:   { min: 40, max: 85 },
   warningThreshold:    { min: 30,  max: 175 },
   criticalThreshold:   { min: 20,  max: 180 },
 };
@@ -344,8 +389,8 @@ export const widePushupConfig: ExerciseFSMConfig = {
   exerciseName: 'wide_push_up',
   joints: ['left_elbow', 'right_elbow'],
   startThreshold:      { min: 150, max: 180 },
-  inflectionThreshold: { min: 85,  max: 155 },
-  completeThreshold:   { min: 60,  max: 110 },
+  inflectionThreshold: { min: 100, max: 140 },
+  completeThreshold:   { min: 55, max: 95 },
   warningThreshold:    { min: 40,  max: 175 },
   criticalThreshold:   { min: 25,  max: 180 },
 };
@@ -371,9 +416,9 @@ export const plankConfig: ExerciseFSMConfig = {
 export const mountainClimberConfig: ExerciseFSMConfig = {
   exerciseName: 'mountain_climber',
   joints: ['left_hip', 'right_hip'],
-  startThreshold:      { min: 140, max: 180 },
-  inflectionThreshold: { min: 70,  max: 145 },
-  completeThreshold:   { min: 40,  max: 80  },
+  startThreshold:      { min: 150, max: 180 },
+  inflectionThreshold: { min: 100, max: 135 },
+  completeThreshold:   { min: 40, max: 85 },
   warningThreshold:    { min: 25,  max: 180 },
   criticalThreshold:   { min: 15,  max: 180 },
 };

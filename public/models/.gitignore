@@ -1,0 +1,11 @@
+# Model weight files are large binaries — do not commit them to git.
+# Fetch them with `npm run fetch-models` (see scripts/fetch-models.mjs) or
+# place your own exported files here. See public/models/README.md.
+*.onnx
+*.task
+*.bin
+# TFJS model shards
+group*-shard*
+# But keep this directory tracked and its docs.
+!.gitignore
+!README.md

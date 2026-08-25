@@ -17,7 +17,7 @@ const validConfig: ExerciseFSMConfig = {
   exerciseName: 'barbell_squat',
   joints: ['left_knee', 'right_knee'],
   startThreshold:      { min: 160, max: 180 },
-  inflectionThreshold: { min: 90,  max: 130 },
+  inflectionThreshold: { min: 100, max: 140 },
   completeThreshold:   { min: 60,  max: 95  },
   warningThreshold:    { min: 0,   max: 55  },
   criticalThreshold:   { min: 0,   max: 160 },

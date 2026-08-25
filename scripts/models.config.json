@@ -1,0 +1,4 @@
+{
+  "_comment": "Source URLs for `npm run fetch-models`. yolov8n-pose.onnx is a ready-exported model with output shape [1,56,8400] matching the YoloPoseAdapter decoder. RTMPose has no ready public ONNX with our expected shape — export it yourself (see public/models/README.md).",
+  "yolov8n-pose.onnx": "https://raw.githubusercontent.com/akbartus/Yolov8-Pose-Detection-on-Browser/main/yolov8_pose_onnx/model/yolov8n-pose.onnx"
+}

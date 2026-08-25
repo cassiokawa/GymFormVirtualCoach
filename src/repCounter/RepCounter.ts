@@ -74,10 +74,25 @@ function withinRange(degrees: number, min: number, max: number): boolean {
  *
  * Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6
  */
+/**
+ * Number of consecutive frames a joint must satisfy the next state's range
+ * before the FSM transitions. This debounce absorbs pose-estimation jitter so
+ * a single noisy frame near a boundary can't trigger a spurious transition
+ * (which previously caused large over-counts).
+ */
+const TRANSITION_CONFIRM_FRAMES = 4;
+
 export class RepCounter {
   private state: FSMState = 'START';
   private repCount: number = 0;
   private readonly config: ExerciseFSMConfig;
+
+  /**
+   * Count of consecutive frames the *next* target range has been satisfied.
+   * Reset whenever the target range is not met, so only sustained movement
+   * advances the FSM.
+   */
+  private confirmFrames: number = 0;
 
   /**
    * Timestamp (ms) of the first `update()` call after construction or reset.
@@ -142,19 +157,21 @@ export class RepCounter {
 
     switch (this.state) {
       case 'START':
-        if (this.majorityWithin(available, this.config.inflectionThreshold.min, this.config.inflectionThreshold.max)) {
+        if (this.confirmed(available, this.config.inflectionThreshold)) {
           this.state = 'INFLECTION';
+          this.confirmFrames = 0;
         }
         break;
 
       case 'INFLECTION':
-        if (this.majorityWithin(available, this.config.completeThreshold.min, this.config.completeThreshold.max)) {
+        if (this.confirmed(available, this.config.completeThreshold)) {
           this.state = 'COMPLETE';
+          this.confirmFrames = 0;
         }
         break;
 
       case 'COMPLETE':
-        if (this.majorityWithin(available, this.config.startThreshold.min, this.config.startThreshold.max)) {
+        if (this.confirmed(available, this.config.startThreshold)) {
           // --- TUT calculation ---
           const tutMs = message.timestampMs - (this.startTimestamp as number);
           this.lastRepTutMs = tutMs;
@@ -174,6 +191,7 @@ export class RepCounter {
           // Reset TUT start to this frame
           this.startTimestamp = message.timestampMs;
           this.state = 'START';
+          this.confirmFrames = 0;
         }
         break;
     }
@@ -225,6 +243,7 @@ export class RepCounter {
   reset(): void {
     this.state = 'START';
     this.repCount = 0;
+    this.confirmFrames = 0;
     this.startTimestamp = null;
     this.lastRepTutMs = null;
     this.completedReps = [];
@@ -282,6 +301,29 @@ export class RepCounter {
   private majorityWithin(angles: JointAngle[], min: number, max: number): boolean {
     if (angles.length === 0) return false;
     const inRange = angles.filter((a) => withinRange(a.degrees, min, max)).length;
-    return inRange >= Math.ceil(angles.length / 2);
+    // Strict consensus: require MORE than half of the visible joints to agree.
+    // For a single visible joint that one must agree; for two, both must; for
+    // three, at least two; for four, at least three. This prevents a single
+    // noisy joint (common for knees/elbows seen at an angle) from driving
+    // spurious state transitions while still tolerating a fully-occluded side.
+    const needed = Math.floor(angles.length / 2) + 1;
+    return inRange >= needed;
+  }
+
+  /**
+   * Debounced range check used for state transitions. Returns `true` only when
+   * the majority of available joints have satisfied `threshold` for
+   * {@link TRANSITION_CONFIRM_FRAMES} consecutive frames. A frame that fails the
+   * range resets the confirmation streak, so only sustained movement advances
+   * the FSM. This absorbs single-frame pose jitter that previously caused
+   * spurious transitions and large over-counts.
+   */
+  private confirmed(angles: JointAngle[], threshold: { min: number; max: number }): boolean {
+    if (this.majorityWithin(angles, threshold.min, threshold.max)) {
+      this.confirmFrames += 1;
+    } else {
+      this.confirmFrames = 0;
+    }
+    return this.confirmFrames >= TRANSITION_CONFIRM_FRAMES;
   }
 }

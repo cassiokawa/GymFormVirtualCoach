@@ -5,44 +5,396 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CV Fitness & Form Assistant</title>
   <style>
+    /* ---- Design tokens ---------------------------------------------------- */
+    :root {
+      --bg-0: #0b1020;          /* app background base */
+      --bg-1: #121a33;          /* elevated surface */
+      --bg-2: #1a2444;          /* card / control surface */
+      --bg-3: #22305a;          /* hover / raised */
+      --line: rgba(255,255,255,0.08);
+      --line-strong: rgba(255,255,255,0.16);
+
+      --text: #eef1f8;
+      --text-dim: #9aa4c0;
+      --text-faint: #66708f;
+
+      --accent: #00d4a0;        /* primary teal */
+      --accent-strong: #00b894;
+      --accent-soft: rgba(0, 212, 160, 0.14);
+      --violet: #7c6cff;        /* lab mode */
+      --violet-soft: rgba(124, 108, 255, 0.16);
+      --danger: #ff5a6a;
+      --warn: #ffce54;
+
+      --radius-sm: 8px;
+      --radius: 14px;
+      --radius-lg: 20px;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+      --shadow: 0 8px 24px rgba(0,0,0,0.35);
+      --shadow-lg: 0 18px 50px rgba(0,0,0,0.45);
+      --ring: 0 0 0 3px var(--accent-soft);
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #1a1a2e; color: #eee; min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-    h1 { margin-bottom: 12px; font-size: 1.5rem; }
-    #status { margin-bottom: 16px; padding: 8px 16px; border-radius: 8px; background: #16213e; font-size: 0.9rem; }
-    #video-container { position: relative; width: 640px; max-width: 100%; border-radius: 12px; overflow: hidden; background: #000; }
-    video { width: 100%; display: block; transform: scaleX(-1); }
-    canvas#overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
-    canvas#ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; /* NOT mirrored — for readable text */ }
-    #controls { margin-top: 16px; display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
-    button { padding: 10px 20px; border: none; border-radius: 8px; font-size: 0.95rem; cursor: pointer; font-weight: 600; transition: transform 0.1s; }
-    button:active { transform: scale(0.95); }
-    #startBtn { background: #00b894; color: #fff; }
-    #stopBtn { background: #d63031; color: #fff; }
-    #exerciseSelect { padding: 10px 14px; border-radius: 8px; border: 1px solid #333; background: #16213e; color: #eee; font-size: 0.95rem; cursor: pointer; }
-    #stats { margin-top: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 12px; width: 640px; max-width: 100%; }
-    .stat-card { background: #16213e; border-radius: 8px; padding: 16px; text-align: center; }
-    .stat-card .value { font-size: 2rem; font-weight: bold; color: #00b894; }
-    .stat-card .label { font-size: 0.75rem; color: #aaa; margin-top: 4px; }
-    #guide-container { margin-top: 20px; width: 640px; max-width: 100%; }
-    .alert-overlay { font-size: 1.1rem !important; }
-    .routine-item { display: flex; align-items: center; gap: 8px; padding: 6px 10px; margin-bottom: 4px; background: #16213e; border-radius: 6px; font-size: 0.85rem; }
-    .routine-item .routine-num { color: #00b894; font-weight: 700; min-width: 20px; }
+
+    html { color-scheme: dark; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 28px 20px 64px;
+      background:
+        radial-gradient(1200px 600px at 15% -10%, rgba(0,212,160,0.10), transparent 60%),
+        radial-gradient(1000px 600px at 100% 0%, rgba(124,108,255,0.10), transparent 55%),
+        var(--bg-0);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    /* Shared content width */
+    .shell, #video-container, #stats, #guide-container, #log-container,
+    #routine-builder, #routine-builder-exercises, #routine-progress, #controls {
+      width: 100%;
+      max-width: 680px;
+    }
+
+    /* ---- Header ----------------------------------------------------------- */
+    .app-header { text-align: center; margin-bottom: 6px; }
+    .app-header .brand {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-size: 1.6rem; font-weight: 800; letter-spacing: -0.02em;
+    }
+    .app-header .brand .logo {
+      width: 40px; height: 40px; border-radius: 12px;
+      display: grid; place-items: center; font-size: 1.2rem;
+      background: linear-gradient(135deg, var(--accent), var(--violet));
+      box-shadow: var(--shadow-sm);
+    }
+    .app-header .tagline {
+      margin-top: 6px; font-size: 0.85rem; color: var(--text-dim);
+    }
+    /* Legacy h1 kept hidden in case anything references it */
+    h1 { font-size: 1.5rem; }
+
+    /* ---- Status pill ------------------------------------------------------ */
+    #status {
+      margin: 16px 0 18px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--bg-2);
+      border: 1px solid var(--line);
+      color: var(--text-dim);
+      font-size: 0.88rem;
+      display: inline-flex; align-items: center; gap: 8px;
+      box-shadow: var(--shadow-sm);
+      transition: color .2s ease, border-color .2s ease, background .2s ease;
+    }
+    #status::before {
+      content: ""; width: 8px; height: 8px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 0 4px var(--accent-soft);
+    }
+
+    /* ---- Video stage ------------------------------------------------------ */
+    #video-container {
+      position: relative;
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      background: #000;
+      border: 1px solid var(--line-strong);
+      box-shadow: var(--shadow-lg);
+      aspect-ratio: 4 / 3;
+    }
+    video { width: 100%; height: 100%; object-fit: contain; display: block; transform: scaleX(-1); }
+    canvas#overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; transform: scaleX(-1); }
+    canvas#ui-overlay { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+
+    /* ---- On-video HUD (always visible during a workout) ------------------ */
+    /* All four live metrics overlay the video edges so nothing sits below the
+       stage and the center of the frame stays clear for the user's body.
+       This is positioned DOM only (no canvas work) — zero inference cost. */
+    #hud {
+      position: absolute; inset: 0;
+      display: none;                 /* shown only during active tracking */
+      pointer-events: none; z-index: 40;
+    }
+    #hud.visible { display: block; }
+
+    /* Shared frosted-glass chip. */
+    .hud-chip {
+      position: absolute;
+      background: rgba(10, 16, 32, 0.55); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.14);
+      box-shadow: var(--shadow-sm); border-radius: 999px;
+    }
+
+    /* Top-left: hero rep counter. */
+    .hud-rep {
+      top: 12px; left: 12px;
+      display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 16px;
+    }
+    .hud-rep-value {
+      font-size: clamp(1.9rem, 8vw, 3rem); font-weight: 800; line-height: 1;
+      color: var(--accent); letter-spacing: -0.02em; font-variant-numeric: tabular-nums;
+      text-shadow: 0 1px 10px rgba(0,212,160,0.4);
+    }
+    .hud-rep-label {
+      font-size: 0.68rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.1em; color: var(--text-dim);
+    }
+
+    /* Top-right: movement phase. */
+    .hud-phase {
+      top: 12px; right: 12px; padding: 8px 14px;
+      font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em;
+      color: var(--text); text-transform: uppercase;
+      transition: color .2s ease, border-color .2s ease;
+      max-width: 45%; text-align: center;
+    }
+
+    /* Bottom strip: secondary metrics (FPS + last rep), out of the action zone. */
+    .hud-metrics {
+      left: 12px; bottom: 12px; right: 12px;
+      display: flex; gap: 8px; background: none; border: none; box-shadow: none;
+      justify-content: flex-start;
+    }
+    .hud-metric {
+      display: inline-flex; align-items: baseline; gap: 6px; padding: 6px 12px;
+      background: rgba(10, 16, 32, 0.55); backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 999px;
+      font-variant-numeric: tabular-nums;
+    }
+    .hud-metric .m-value { font-size: 0.95rem; font-weight: 700; color: var(--text); }
+    .hud-metric .m-label {
+      font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--text-faint);
+    }
+
+    /* Rep-completed pulse on the count. */
+    .hud-rep.pulse { animation: hudPulse .45s ease; }
+    @keyframes hudPulse {
+      0% { transform: scale(1); }
+      35% { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    @media (max-width: 400px) {
+      .hud-metric .m-label { display: none; }  /* keep only numbers on tiny screens */
+      .hud-rep-value { font-size: clamp(1.7rem, 10vw, 2.4rem); }
+    }
+
+    /* ---- Controls & buttons ---------------------------------------------- */
+    #controls {
+      margin-top: 18px; display: flex; gap: 10px;
+      flex-wrap: wrap; justify-content: center;
+    }
+    button {
+      padding: 11px 20px; border: 1px solid transparent; border-radius: var(--radius-sm);
+      font-size: 0.9rem; cursor: pointer; font-weight: 650; letter-spacing: 0.01em;
+      color: #fff; background: var(--bg-3);
+      display: inline-flex; align-items: center; gap: 8px;
+      transition: transform .08s ease, filter .15s ease, box-shadow .15s ease, opacity .15s ease, background .15s ease;
+    }
+    button:hover:not(:disabled) { filter: brightness(1.08); transform: translateY(-1px); }
+    button:active:not(:disabled) { transform: translateY(0) scale(0.98); }
+    button:focus-visible { outline: none; box-shadow: var(--ring); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+    #startBtn, #startRoutineBtn, #addToRoutine {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+      color: #05231c; box-shadow: 0 6px 18px rgba(0,212,160,0.28);
+    }
+    #stopBtn { background: linear-gradient(135deg, #ff6b7a, var(--danger)); box-shadow: 0 6px 18px rgba(255,90,106,0.25); }
+    #skipBtn { background: var(--bg-3); border-color: var(--line-strong); }
+    #labToggleBtn { background: linear-gradient(135deg, #8a7bff, var(--violet)); box-shadow: 0 6px 18px rgba(124,108,255,0.3); }
+
+    select, input[type="number"] {
+      padding: 11px 14px; border-radius: var(--radius-sm);
+      border: 1px solid var(--line-strong); background: var(--bg-2); color: var(--text);
+      font-size: 0.9rem; cursor: pointer; transition: border-color .15s ease, box-shadow .15s ease;
+    }
+    select:hover, input[type="number"]:hover { border-color: var(--accent-strong); }
+    select:focus-visible, input[type="number"]:focus-visible { outline: none; box-shadow: var(--ring); border-color: var(--accent); }
+    #exerciseSelect { min-width: 200px; font-weight: 600; }
+
+    /* Range sliders */
+    input[type="range"] {
+      -webkit-appearance: none; appearance: none; height: 6px; border-radius: 999px;
+      background: var(--bg-3); cursor: pointer;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; appearance: none; width: 18px; height: 18px; border-radius: 50%;
+      background: var(--accent); border: 3px solid var(--bg-1); box-shadow: var(--shadow-sm);
+    }
+    input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px; border-radius: 50%; background: var(--accent); border: 3px solid var(--bg-1);
+    }
+
+    /* ---- Live stats ------------------------------------------------------- */
+    #stats {
+      margin-top: 22px; display: grid; gap: 12px;
+      /* Phone default: hero Reps card spans both columns, others share 2 cols. */
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .stat-card {
+      position: relative; background: var(--bg-1); border: 1px solid var(--line);
+      border-radius: var(--radius); padding: 16px 14px;
+      box-shadow: var(--shadow-sm); overflow: hidden;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      transition: transform .15s ease, border-color .15s ease, background .15s ease;
+    }
+    .stat-card::after {
+      content: ""; position: absolute; inset: 0 0 auto 0; height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--violet)); opacity: .55;
+    }
+    .stat-card:hover { transform: translateY(-2px); border-color: var(--line-strong); }
+    .stat-card .stat-icon { font-size: 1.05rem; line-height: 1; opacity: .9; }
+    .stat-card .value {
+      font-size: clamp(1.5rem, 8vw, 2.3rem); font-weight: 800; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent), #6ee7c8);
+      -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+      line-height: 1.1; overflow-wrap: anywhere; text-align: center; font-variant-numeric: tabular-nums;
+    }
+    .stat-card .label {
+      font-size: 0.66rem; color: var(--text-faint);
+      text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; text-align: center;
+    }
+
+    /* Hero "Reps" card: full-width, bigger, and visually primary. */
+    #statReps {
+      grid-column: 1 / -1;
+      background:
+        radial-gradient(120% 140% at 0% 0%, var(--accent-soft), transparent 60%),
+        var(--bg-1);
+      border-color: rgba(0,212,160,0.35);
+    }
+    #statReps .value { font-size: clamp(2.6rem, 15vw, 4rem); }
+    #statReps .label { font-size: 0.72rem; color: var(--accent); }
+
+    /* FSM state text can be a long word (INFLECTION); size it down and pill it. */
+    #statFsm .value {
+      font-size: clamp(0.9rem, 4.5vw, 1.15rem); font-weight: 750;
+      -webkit-text-fill-color: initial; background: none; color: var(--text);
+      padding: 4px 12px; border-radius: 999px; background-color: var(--bg-3);
+      letter-spacing: 0.04em;
+    }
+
+    /* ---- Collapsible panels (details) ------------------------------------ */
+    #routine-builder, #routine-builder-exercises { margin-top: 16px; }
+    details {
+      background: var(--bg-1); border: 1px solid var(--line);
+      border-radius: var(--radius); box-shadow: var(--shadow-sm); overflow: hidden;
+    }
+    details + details, details { margin-top: 12px; }
+    summary {
+      cursor: pointer; font-weight: 650; color: var(--text);
+      list-style: none; padding: 14px 18px; display: flex; align-items: center; gap: 10px;
+      transition: background .15s ease;
+    }
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: "⌄"; margin-left: auto; color: var(--text-dim);
+      transition: transform .2s ease; font-size: 1.1rem; line-height: 1;
+    }
+    details[open] summary { border-bottom: 1px solid var(--line); }
+    details[open] summary::after { transform: rotate(180deg); }
+    summary:hover { background: var(--bg-2); }
+    details > *:not(summary) { padding: 0 16px 16px; }
+
+    /* ---- Routine list ----------------------------------------------------- */
+    .routine-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 6px;
+      background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--radius-sm);
+      font-size: 0.88rem;
+    }
+    .routine-item .routine-num { color: var(--accent); font-weight: 800; min-width: 22px; }
     .routine-item .routine-name { flex: 1; }
-    .routine-item .routine-reps-badge { background: #00b894; color: #fff; border-radius: 12px; padding: 2px 8px; font-size: 0.75rem; font-weight: 600; }
-    .routine-item .routine-remove { background: none; border: none; color: #d63031; cursor: pointer; font-size: 1.1rem; padding: 0 4px; line-height: 1; }
-    .routine-transition-flash { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 184, 148, 0.85); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px; z-index: 100; animation: flashFade 1.8s forwards; pointer-events: none; }
-    .routine-transition-flash .flash-label { font-size: 0.9rem; color: rgba(255,255,255,0.8); }
-    .routine-transition-flash .flash-name { font-size: 1.6rem; font-weight: 700; color: #fff; }
+    .routine-item .routine-reps-badge {
+      background: var(--accent-soft); color: var(--accent); border: 1px solid rgba(0,212,160,0.3);
+      border-radius: 999px; padding: 3px 10px; font-size: 0.72rem; font-weight: 700;
+    }
+    .routine-item .routine-remove {
+      background: none; border: none; color: var(--danger); cursor: pointer;
+      font-size: 1.2rem; padding: 0 4px; line-height: 1; transition: transform .1s ease;
+    }
+    .routine-item .routine-remove:hover { transform: scale(1.2); }
+
+    /* ---- Routine progress ------------------------------------------------- */
+    #routine-progress { margin-top: 14px; }
+    #routine-progress-text { font-size: 0.82rem; margin-bottom: 6px; color: var(--text-dim); font-weight: 600; }
+    #routine-progress > div:last-child { background: var(--bg-2); border-radius: 999px; height: 10px; overflow: hidden; border: 1px solid var(--line); }
+    #routine-progress-bar { background: linear-gradient(90deg, var(--accent), var(--violet)); height: 100%; width: 0%; transition: width 0.4s ease; }
+
+    /* ---- Countdown overlay ------------------------------------------------ */
+    #countdown-overlay { backdrop-filter: blur(6px); }
+
+    /* ---- Overlays / flashes ---------------------------------------------- */
+    .alert-overlay { font-size: 1.1rem !important; }
+    .routine-transition-flash {
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(0,212,160,0.9), rgba(124,108,255,0.85));
+      display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 8px;
+      z-index: 100; animation: flashFade 1.8s forwards; pointer-events: none;
+    }
+    .routine-transition-flash .flash-label { font-size: 0.85rem; color: rgba(255,255,255,0.85); text-transform: uppercase; letter-spacing: 0.1em; }
+    .routine-transition-flash .flash-name { font-size: 1.7rem; font-weight: 800; color: #fff; }
     @keyframes flashFade { 0% { opacity: 1; } 70% { opacity: 1; } 100% { opacity: 0; } }
+
+    /* Helper text used inside settings panels */
+    .hint { font-size: 0.72rem; color: var(--text-faint); }
+
+    /* ---- Responsive layout ------------------------------------------------ */
+
+    /* Desktop / tablet (>= 640px): 4 equal stat columns in one row, no hero span. */
+    @media (min-width: 640px) {
+      #stats { grid-template-columns: repeat(4, 1fr); }
+      #statReps { grid-column: auto; }
+      #statReps .value { font-size: clamp(2rem, 4vw, 2.6rem); }
+    }
+
+    /* Small phones (<= 380px): tighten padding; keep the 2-col grid + hero Reps. */
+    @media (max-width: 380px) {
+      body { padding: 20px 14px 56px; }
+      .stat-card { padding: 14px 10px; }
+      #statReps .value { font-size: clamp(2.4rem, 18vw, 3.2rem); }
+    }
+
+    /* Phone header/controls tuning. */
+    @media (max-width: 520px) {
+      .app-header .brand { font-size: 1.3rem; }
+      .app-header .tagline { font-size: 0.78rem; }
+      #controls { gap: 8px; }
+      button { padding: 11px 16px; font-size: 0.88rem; }
+      #controls button, #controls select { flex: 1 1 auto; min-width: 0; }
+      #exerciseSelect { flex-basis: 100%; }
+    }
   </style>
 </head>
 <body>
-  <h1>🏋️ CV Fitness & Form Assistant</h1>
-  <div id="status">Click "Start" to begin pose detection</div>
+  <header class="app-header">
+    <div class="brand"><span class="logo">🏋️</span> Form Coach</div>
+    <div class="tagline">Real-time pose analysis &amp; rep tracking — all in your browser</div>
+  </header>
+  <div id="status">Click Start to begin pose detection</div>
   <div id="video-container">
     <video id="video" autoplay playsinline muted></video>
     <canvas id="overlay"></canvas>
     <canvas id="ui-overlay"></canvas>
+    <div id="hud" aria-hidden="true">
+      <div class="hud-chip hud-rep">
+        <span class="hud-rep-value" id="hudReps">0</span>
+        <span class="hud-rep-label">reps</span>
+      </div>
+      <div class="hud-chip hud-phase" id="hudPhase">READY</div>
+      <div class="hud-metrics">
+        <div class="hud-metric"><span class="m-value" id="hudFps">0</span><span class="m-label">fps</span></div>
+        <div class="hud-metric"><span class="m-value" id="hudTut">—</span><span class="m-label">last rep ms</span></div>
+      </div>
+    </div>
     <div id="countdown-overlay" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; flex-direction:column; z-index:50;"></div>
   </div>
   <div id="controls">
@@ -85,32 +437,33 @@
     <button id="startBtn">▶ Start</button>
     <button id="stopBtn" disabled>■ Stop</button>
     <button id="skipBtn" style="display:none;">⏭ Skip Lock</button>
+    <button id="labToggleBtn" style="background:#6c5ce7; color:#fff;">🔬 Lab Mode</button>
   </div>
   <div id="routine-builder" style="margin-top:16px; width:640px; max-width:100%;">
     <details>
-      <summary style="cursor:pointer; font-weight:600; color:#00b894;">⚙️ Sensitivity Settings</summary>
-      <div style="margin-top:8px; display:flex; flex-direction:column; gap:10px; padding:8px; background:#16213e; border-radius:8px;">
-        <label style="font-size:0.8rem; display:flex; align-items:center; gap:8px;">
-          <span style="min-width:140px;">Form Strictness:</span>
+      <summary>⚙️ Sensitivity Settings</summary>
+      <div style="display:flex; flex-direction:column; gap:14px; padding-top:14px;">
+        <label style="font-size:0.85rem; display:flex; align-items:center; gap:12px;">
+          <span style="min-width:140px; font-weight:600;">Form Strictness</span>
           <input id="sensitivitySlider" type="range" min="1" max="10" value="5" style="flex:1;">
-          <span id="sensitivityValue" style="min-width:30px; text-align:right;">5</span>
+          <span id="sensitivityValue" style="min-width:26px; text-align:right; font-weight:700; color:var(--accent);">5</span>
         </label>
-        <div style="font-size:0.7rem; color:#888;">1 = Very forgiving (easy reps) → 10 = Very strict (perfect form required)</div>
-        <label style="font-size:0.8rem; display:flex; align-items:center; gap:8px;">
-          <span style="min-width:140px;">Framing Tolerance:</span>
+        <div class="hint">1 = Very forgiving (easy reps) → 10 = Very strict (perfect form required)</div>
+        <label style="font-size:0.85rem; display:flex; align-items:center; gap:12px;">
+          <span style="min-width:140px; font-weight:600;">Framing Tolerance</span>
           <input id="framingSlider" type="range" min="1" max="10" value="7" style="flex:1;">
-          <span id="framingValue" style="min-width:30px; text-align:right;">7</span>
+          <span id="framingValue" style="min-width:26px; text-align:right; font-weight:700; color:var(--accent);">7</span>
         </label>
-        <div style="font-size:0.7rem; color:#888;">1 = Needs full body visible → 10 = Works with partial body</div>
+        <div class="hint">1 = Needs full body visible → 10 = Works with partial body</div>
       </div>
     </details>
   </div>
   <div id="routine-builder-exercises" style="margin-top:12px; width:640px; max-width:100%;">
     <details>
-      <summary style="cursor:pointer; font-weight:600; color:#00b894;">📋 Build a Routine</summary>
-      <div id="routine-list" style="margin-top:8px;"></div>
-      <div style="display:flex; gap:8px; margin-top:8px; align-items:center;">
-        <select id="routineExerciseAdd" style="padding:8px 10px; border-radius:6px; border:1px solid #333; background:#16213e; color:#eee; font-size:0.85rem;">
+      <summary>📋 Build a Routine</summary>
+      <div id="routine-list" style="padding-top:14px;"></div>
+      <div style="display:flex; gap:8px; margin-top:8px; align-items:center; flex-wrap:wrap;">
+        <select id="routineExerciseAdd" style="flex:1; min-width:180px;">
           <optgroup label="🦵 Legs">
             <option value="barbell_squat">Barbell Squat</option>
             <option value="lunge">Lunge</option>
@@ -146,23 +499,39 @@
             <option value="mountain_climber">Mountain Climber</option>
           </optgroup>
         </select>
-        <input id="routineReps" type="number" min="1" max="50" value="10" placeholder="Reps" style="width:60px; padding:8px; border-radius:6px; border:1px solid #333; background:#16213e; color:#eee; font-size:0.85rem;">
-        <button id="addToRoutine" type="button" style="padding:8px 14px; border-radius:6px; border:none; background:#00b894; color:#fff; font-weight:600; cursor:pointer; font-size:0.85rem;">+ Add</button>
+        <input id="routineReps" type="number" min="1" max="50" value="10" placeholder="Reps" style="width:72px;">
+        <button id="addToRoutine" type="button">+ Add</button>
       </div>
-      <button id="startRoutineBtn" type="button" disabled style="margin-top:12px; width:100%; padding:10px; border-radius:8px; border:none; background:#00b894; color:#fff; font-weight:600; cursor:pointer; font-size:0.95rem; opacity:0.5;">▶ Start Routine</button>
+      <button id="startRoutineBtn" type="button" disabled style="margin-top:14px; width:100%; opacity:0.5;">▶ Start Routine</button>
     </details>
   </div>
   <div id="routine-progress" style="display:none; margin-top:12px; width:640px; max-width:100%;">
-    <div id="routine-progress-text" style="font-size:0.85rem; margin-bottom:4px; color:#aaa;"></div>
-    <div style="background:#16213e; border-radius:8px; height:8px; overflow:hidden;">
-      <div id="routine-progress-bar" style="background:#00b894; height:100%; width:0%; transition:width 0.3s;"></div>
+    <div id="routine-progress-text"></div>
+    <div>
+      <div id="routine-progress-bar"></div>
     </div>
   </div>
   <div id="stats">
-    <div class="stat-card" id="statReps"><div class="value" id="repCount">0</div><div class="label">Reps</div></div>
-    <div class="stat-card" id="statFsm"><div class="value" id="fsmState">IDLE</div><div class="label">FSM State</div></div>
-    <div class="stat-card"><div class="value" id="fps">0</div><div class="label">FPS</div></div>
-    <div class="stat-card" id="statTut"><div class="value" id="lastTut">—</div><div class="label">Last TUT (ms)</div></div>
+    <div class="stat-card" id="statReps">
+      <span class="stat-icon">🔁</span>
+      <div class="value" id="repCount">0</div>
+      <div class="label">Reps Completed</div>
+    </div>
+    <div class="stat-card" id="statFsm">
+      <span class="stat-icon">🎯</span>
+      <div class="value" id="fsmState">IDLE</div>
+      <div class="label">Movement Phase</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-icon">⚡</span>
+      <div class="value" id="fps">0</div>
+      <div class="label">Frames / sec</div>
+    </div>
+    <div class="stat-card" id="statTut">
+      <span class="stat-icon">⏱️</span>
+      <div class="value" id="lastTut">—</div>
+      <div class="label">Last Rep (ms)</div>
+    </div>
   </div>
   <div id="guide-container"></div>
   <div id="log-container"></div>

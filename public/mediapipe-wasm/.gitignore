@@ -1,0 +1,5 @@
+# MediaPipe Tasks Vision WASM runtime, copied from node_modules by
+# `npm run copy-wasm` (also run automatically by `npm run fetch-models`).
+# These are large binaries regenerated from the installed package — not committed.
+*
+!.gitignore

@@ -1,0 +1,520 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Add lab types and dependencies": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578302
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359588870
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359710710
+      }
+    ],
+    "1.2 Implement ModelRegistry in `src/lab/registry/ModelRegistry.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578329
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787360848070
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361017743
+      }
+    ],
+    "1.3 Implement KeypointNormalizer in `src/lab/normalize/`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578354
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787360849452
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361019018
+      }
+    ],
+    "1.4 Write unit + property tests for ModelRegistry and KeypointNormalizer": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578380
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361025156
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361957208
+      }
+    ],
+    "1.5 Implement ResultStore in `src/lab/store/`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578404
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787360850405
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361020221
+      }
+    ],
+    "1.6 Write unit tests for ResultStore": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578431
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361026663
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361958101
+      }
+    ],
+    "2.1 Implement PoseAdapter base and worker protocol": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578456
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361028704
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361955734
+      }
+    ],
+    "2.2 Implement pose adapters": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578478
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361963536
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390770762
+      }
+    ],
+    "2.3 Implement PoseWorkerPool in `src/lab/workers/PoseWorkerPool.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578499
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361964653
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390771869
+      }
+    ],
+    "2.4 Write unit tests for worker pool and adapters": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578521
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390777771
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390908372
+      }
+    ],
+    "3.1 Implement OKS in `src/lab/benchmark/oks.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578541
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390776582
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390909300
+      }
+    ],
+    "3.2 Implement BenchmarkRunner in `src/lab/benchmark/BenchmarkRunner.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578562
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390913932
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787391127041
+      }
+    ],
+    "3.3 Implement Recommender in `src/lab/compare/Recommender.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578582
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390915349
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787391128221
+      }
+    ],
+    "3.4 Implement AlgorithmLab orchestrator + LabModePanel": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578606
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787391132992
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395462182
+      }
+    ],
+    "3.5 Write unit tests for benchmark, OKS, recommender": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578632
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395466509
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395686672
+      }
+    ],
+    "4. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578656
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395692653
+      }
+    ],
+    "5.1 Implement ComparisonView in `src/lab/compare/ComparisonView.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578681
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395698026
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403659825
+      }
+    ],
+    "5.2 Implement AnnotationTool in `src/lab/annotate/AnnotationTool.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578706
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395699471
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403661213
+      }
+    ],
+    "5.3 Write unit tests for ComparisonView and AnnotationTool": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578731
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403674515
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404029621
+      }
+    ],
+    "6.1 Implement ExerciseClassifier in `src/lab/classify/ExerciseClassifier.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578754
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395700882
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403662653
+      }
+    ],
+    "6.2 Implement FormQualityModel in `src/lab/classify/FormQualityModel.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578780
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395702326
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403664179
+      }
+    ],
+    "6.3 Write unit tests for classifier and form model": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578800
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403673235
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404030889
+      }
+    ],
+    "7.1 Implement Recorder in `src/lab/record/Recorder.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578827
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395703553
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403665403
+      }
+    ],
+    "7.2 Implement Trainer + model export": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578847
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403672281
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404032320
+      }
+    ],
+    "7.3 Write unit tests for Recorder and Trainer": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578871
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404038519
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404185226
+      }
+    ],
+    "8.1 Implement PretrainedCatalog in `src/lab/catalog/PretrainedCatalog.ts`": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578893
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787403671996
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404033446
+      }
+    ],
+    "8.2 Write unit tests for PretrainedCatalog": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578925
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404039646
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404183996
+      }
+    ],
+    "9. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787359578946
+      },
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404735042
+      }
+    ],
+    "1. Foundations: types, dependencies, registry, normalizer, store": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787361958128
+      }
+    ],
+    "2. Pose adapters and Web Worker pool": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787390908403
+      }
+    ],
+    "3. Benchmarking, recommender, and Lab Mode wiring": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787395686805
+      }
+    ],
+    "5. Comparison view and ground-truth annotation": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404029661
+      }
+    ],
+    "6. Exercise classification and form quality assessment": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404030931
+      }
+    ],
+    "8. Pre-trained adapter catalog": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404184030
+      }
+    ],
+    "7. Data recording and in-browser training": [
+      {
+        "executionId": "f34208b1-ca09-4021-9651-c0aadabce4cf",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1787404185255
+      }
+    ]
+  }
+}
