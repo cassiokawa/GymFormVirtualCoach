@@ -383,6 +383,49 @@ export class Storage extends EventTarget {
   }
 
   // ---------------------------------------------------------------------------
+  // clearWorkoutData()
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Permanently delete all workout data held in IndexedDB: every row in
+   * `workout_sessions` and `session_exercise_logs`. This is the IndexedDB half
+   * of scoped Workout_Data erasure (Req 5.3) — the localStorage half is handled
+   * by {@link PrivacyManager.eraseWorkoutData}. Body_Data (which lives only in
+   * localStorage, encrypted) is untouched by this operation.
+   *
+   * Resolves once both stores are cleared. If the database was never opened
+   * there is nothing to clear, so this resolves immediately.
+   */
+  clearWorkoutData(): Promise<void> {
+    return new Promise<void>((resolve, reject) => {
+      if (this.db === null) {
+        // Nothing persisted yet — treat as a successful no-op.
+        resolve();
+        return;
+      }
+
+      let tx: IDBTransaction;
+      try {
+        tx = this.db.transaction(['workout_sessions', 'session_exercise_logs'], 'readwrite');
+      } catch (e) {
+        reject(e instanceof Error ? e : new Error(String(e)));
+        return;
+      }
+
+      tx.oncomplete = () => resolve();
+      tx.onerror = (_event: Event) => {
+        reject(new Error(`Failed to clear workout data: ${tx.error?.message ?? 'unknown'}`));
+      };
+      tx.onabort = (_event: Event) => {
+        reject(new Error(`Clearing workout data was aborted: ${tx.error?.message ?? 'unknown'}`));
+      };
+
+      tx.objectStore('workout_sessions').clear();
+      tx.objectStore('session_exercise_logs').clear();
+    });
+  }
+
+  // ---------------------------------------------------------------------------
   // Retry buffer
   // ---------------------------------------------------------------------------
 

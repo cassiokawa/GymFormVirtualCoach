@@ -22,4 +22,29 @@ export default defineConfig({
   worker: {
     format: 'es',
   },
+  server: {
+    // Mirror the production Vercel headers (see vercel.json) so cross-origin
+    // isolation — and therefore SharedArrayBuffer + threaded WASM SIMD — behaves
+    // the same in local dev as in production. COEP is 'credentialless' so the
+    // MediaPipe WASM/model CDNs still load; 'require-corp' would block them.
+    headers: {
+      'Cross-Origin-Opener-Policy': 'same-origin',
+      'Cross-Origin-Embedder-Policy': 'credentialless',
+    },
+    proxy: {
+      // Proxy /ollama/* to the local Ollama server. This eliminates CORS issues
+      // because the browser only talks to the Vite dev server's origin.
+      '/ollama': {
+        target: 'http://localhost:11434',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/ollama/, ''),
+      },
+      // Proxy /sync-api/* to the local zero-knowledge sync server.
+      '/sync-api': {
+        target: 'http://localhost:8787',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/sync-api/, ''),
+      },
+    },
+  },
 });

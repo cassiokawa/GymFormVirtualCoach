@@ -9,3 +9,4 @@ group*-shard*
 # But keep this directory tracked and its docs.
 !.gitignore
 !README.md
+anatomy.glb

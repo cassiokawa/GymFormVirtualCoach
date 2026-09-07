@@ -1,0 +1,214 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create `src/privacy/Classification.ts` with `Classified<T>`/`Sensitive<T>` branded types, the `classify` entry function, and `declassifyForDevice` (the greppable on-device escape hatch)": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067313
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262075609
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788265886390
+      }
+    ],
+    "2.1 Re-export the unbranded `EncryptedEnvelope` shape and add `NetworkTransmissible` (envelope + Wrapped_Key_Metadata + account credential) in `src/privacy/Classification.ts`": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067341
+      }
+    ],
+    "2.2 Implement `encryptForSync(vault, data: Classified<T>): Promise<EncryptedEnvelope>` as the single sanctioned transform, delegating to `PrivacyVault.encryptJSON`": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067363
+      }
+    ],
+    "3.1 Create `scripts/classification-guard.mjs` that parses `src/**/*.ts` and flags any module referencing a Network_Sink identifier (`fetch`, `XMLHttpRequest`, `WebSocket`, `sendBeacon`) together with Classified access that does not route through `encryptForSync`": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067381
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262077362
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788265884925
+      }
+    ],
+    "3.2 Wire the Classification_Guard into the build so a violation fails the build": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067398
+      }
+    ],
+    "4. Checkpoint - Ensure the type boundary and guard hold": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067413
+      }
+    ],
+    "5.1 Formalize `src/privacy/PrivacyVault.ts` contracts: AES-GCM Master_Key wrapped independently by Encryption_Passphrase and Recovery_Code via PBKDF2 with per-credential salt; type body-scan payloads as `Classified<BodyScan[]>` on the way in": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067431
+      }
+    ],
+    "5.2 Enforce the locked-vault contract: reject every encrypt/decrypt request while the Vault is locked": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067454
+      }
+    ],
+    "5.3 Formalize change-passphrase to re-wrap the Master_Key under the new Encryption_Passphrase while leaving encrypted data unchanged": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067470
+      }
+    ],
+    "6.1 Retype `loadScans`/`saveScans` in `src/privacy/PrivacyManager.ts` to move `Classified<BodyScan[]>`; encrypt Body_Data with the Master_Key before writing to device storage": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067486
+      }
+    ],
+    "6.2 Rework `buildSyncBlob` to call `encryptForSync` and emit only an Encrypted_Envelope plus Wrapped_Key_Metadata": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067503
+      }
+    ],
+    "7.1 Define explicit `BODY_KEYS` and `WORKOUT_KEYS` partitions and split `eraseAll` into `eraseBodyData`, `eraseWorkoutData`, and `eraseAll` in `PrivacyManager.ts`": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067522
+      }
+    ],
+    "8.1 Implement `SyncConsentRecord` handling in `PrivacyManager.ts`: record consent before the first push; block all push while consent is not granted": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067544
+      }
+    ],
+    "8.2 Enforce the decline-once rule: record a decline and never re-prompt the cloud-sync opt-in": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067561
+      }
+    ],
+    "9.1 Retype `SyncClient.push` in `src/account/SyncClient.ts` so its body parameter is `EncryptedEnvelope` + `WrappedKeyMetadata` only — never `Classified<T>`": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067577
+      }
+    ],
+    "10.1 Formalize `src/account/AuthClient.ts`: Account_Password authenticates against the Sync_Server only; the session token is the sole client-held server credential; Account_Password never unwraps the Master_Key": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067595
+      }
+    ],
+    "11.1 Formalize `server/` storage so `blob` (Encrypted_Envelope) and `keyStore` (Wrapped_Key_Metadata) are stored opaque, and neither Master_Key, Encryption_Passphrase, nor Recovery_Code is ever stored": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067616
+      }
+    ],
+    "11.2 Enforce session protection: reject requests to protected sync endpoints without a valid session with an authentication error": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067633
+      }
+    ],
+    "12.1 Implement `DELETE /account` in `server/` to remove the account record, all associated tokens, and the stored Encrypted_Envelope and Wrapped_Key_Metadata for a valid session; retain no PII beyond deletion": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067651
+      }
+    ],
+    "12.2 Ensure the Client retains local encrypted data after server account deletion and continues to support local export and erasure": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067666
+      }
+    ],
+    "13.1 Wire pull + unwrap so a correct credential on a new device reconstructs the Master_Key from Wrapped_Key_Metadata and decrypts the Encrypted_Envelope": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067682
+      }
+    ],
+    "13.2 Handle incorrect-credential pull: report a decryption failure and do not reconstruct data": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067701
+      }
+    ],
+    "14.1 Render the privacy notice in `src/privacy/PrivacyUI.ts`: sync optional and off by default; server stores only unreadable ciphertext and cannot decrypt Body_Data or Workout_Data; email is the only server-side PII; Encryption_Passphrase and Recovery_Code never leave the device": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067719
+      }
+    ],
+    "14.2 Add sync opt-in and scoped erase controls (erase Body_Data / erase Workout_Data / full erase) wiring into `PrivacyManager`; no crypto in the UI": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067737
+      }
+    ],
+    "15.1 Connect `src/account/AccountUI.ts` to the consent gate, `AuthClient` session, and `SyncClient` push/pull so opt-in sync flows: consent recorded, then envelope + wrapped-key metadata pushed; no push without a valid session": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067758
+      }
+    ],
+    "16. Final checkpoint - Ensure all tests and the boundary pass": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262067774
+      }
+    ],
+    "1. Establish branded classification types": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788265886416
+      }
+    ]
+  }
+}

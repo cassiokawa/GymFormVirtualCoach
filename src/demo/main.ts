@@ -19,6 +19,10 @@ import { RoutineMode } from './routineMode.js';
 import { Storage } from '../storage/Storage.js';
 import { ExerciseLogPanel } from '../exerciseLog/ExerciseLogPanel.js';
 import { InsightsPanel } from '../insights/InsightsPanel.js';
+import { VoiceCoach } from '../voice/VoiceCoach.js';
+import { BodyScanPanel } from '../bodyScan/BodyScanPanel.js';
+import { PrivacyUI } from '../privacy/PrivacyUI.js';
+import { AccountUI } from '../account/AccountUI.js';
 // --- Algorithm Lab (isolated research mode) ---
 import { ModelRegistry } from '../lab/registry/ModelRegistry.js';
 import { registerBuiltInAdapters } from '../lab/registry/adapters/index.js';
@@ -105,16 +109,76 @@ let alertSystem: AlertSystem;
 let preTrackingActive = true;
 let preTrackingController: PreTrackingController | null = null;
 
+// Latest keypoints from the frame loop (used by BodyScanPanel).
+let latestKeypoints: import('../types/index.js').Keypoint[] | null = null;
+
 // ---------------------------------------------------------------------------
 // Exercise Log
 // ---------------------------------------------------------------------------
 
 const logStorage = Storage.getInstance();
 logStorage.open().catch(() => { /* IndexedDB might not be available in all envs */ });
-const logPanel = new ExerciseLogPanel(logStorage);
-logPanel.mount(document.getElementById('log-container')!);
+
+// Helper: create an anchored section container (nav targets these ids).
+const logContainerEl = document.getElementById('log-container')!;
+function makeSection(id: string): HTMLElement {
+  const el = document.createElement('div');
+  el.id = id;
+  el.className = 'nav-anchor';
+  logContainerEl.appendChild(el);
+  return el;
+}
+
+const insightsSection = makeSection('section-insights');
+const bodyScanSection = makeSection('section-bodyscan');
+const logSection = makeSection('section-log');
+
 const insightsPanel = new InsightsPanel(logStorage);
-insightsPanel.mount(document.getElementById('log-container')!);
+insightsPanel.mount(insightsSection);
+
+// Body Scan: visual muscle progress tracking via pose proportions.
+const bodyScanPanel = new BodyScanPanel();
+bodyScanPanel.mount(bodyScanSection);
+
+const logPanel = new ExerciseLogPanel(logStorage);
+logPanel.mount(logSection);
+bodyScanPanel.setKeypointSource(() => latestKeypoints);
+bodyScanPanel.setOverlayCanvas(uiCanvas);
+bodyScanPanel.setCameraStarter(async () => {
+  if (!poseLandmarker) await initMediaPipe();
+  if (video.srcObject === null) await initCamera();
+});
+bodyScanPanel.setSingleDetection(async () => {
+  if (!poseLandmarker || video.srcObject === null) return null;
+  const now = performance.now();
+  const ts = timestampOffset + now;
+  const result = poseLandmarker.detectForVideo(video, ts);
+  if (!result.landmarks || result.landmarks.length === 0) return null;
+  const landmarks = result.landmarks[0]!;
+  const kps: import('../types/index.js').Keypoint[] = landmarks.map((lm, index) => ({
+    index,
+    x: lm.x,
+    y: lm.y,
+    z: lm.z,
+    confidence: lm.visibility ?? 0,
+  }));
+  latestKeypoints = kps;
+  return kps;
+});
+
+// ---------------------------------------------------------------------------
+// Voice Coach (real-time spoken cues using Web Speech API)
+// ---------------------------------------------------------------------------
+const voiceCoach = new VoiceCoach({ rate: 1.05 });
+
+// Voice toggle button.
+const voiceToggleBtn = document.getElementById('voiceToggleBtn') as HTMLButtonElement;
+voiceToggleBtn.addEventListener('click', () => {
+  const on = !voiceCoach.isEnabled();
+  voiceCoach.setEnabled(on);
+  voiceToggleBtn.textContent = on ? '🔊 Coach' : '🔇 Muted';
+  voiceToggleBtn.style.background = on ? '#e17055' : 'var(--bg-3)';
+});
 
 // Track the exercise name and start time for session logging
 let selectedExerciseName = '';
@@ -145,12 +209,128 @@ const algorithmLab = new AlgorithmLab({
 const labPanel = new LabModePanel(algorithmLab, labRegistry);
 const labContainer = document.createElement('div');
 labContainer.id = 'lab-container';
+labContainer.classList.add('nav-anchor');
+labContainer.setAttribute('data-section', 'section-lab');
 document.getElementById('log-container')!.insertAdjacentElement('afterend', labContainer);
 labPanel.mount(labContainer);
 // Keep the module-level `labActive` guard in sync with the orchestrator.
 labActive = algorithmLab.isActive();
 
 const labToggleBtn = document.getElementById('labToggleBtn') as HTMLButtonElement;
+
+// ---------------------------------------------------------------------------
+// Top navigation bar: smooth-scroll to sections + always-visible auth control.
+// ---------------------------------------------------------------------------
+
+const privacyUI = new PrivacyUI();
+const accountUI = new AccountUI(privacyUI);
+// Handle ?verify= / ?reset= links from the dev email console.
+void accountUI.handleUrlTokens();
+
+(function setupNavbar(): void {
+  const nav = document.getElementById('appNav');
+  if (!nav) return;
+
+  const links = Array.from(nav.querySelectorAll<HTMLElement>('.nav-link'));
+
+  // Resolve a nav target id to an actual element (lab uses a data-section alias).
+  const resolveTarget = (id: string): HTMLElement | null => {
+    const direct = document.getElementById(id);
+    if (direct) return direct;
+    return document.querySelector<HTMLElement>(`[data-section="${id}"]`);
+  };
+
+  // Clicking a link scrolls to the section and opens its <details> if present.
+  for (const link of links) {
+    link.addEventListener('click', () => {
+      const targetId = link.dataset['target'];
+      if (!targetId) return;
+      const el = resolveTarget(targetId);
+      if (!el) return;
+      const details = el.tagName === 'DETAILS' ? el : el.querySelector('details');
+      if (details && details instanceof HTMLDetailsElement) details.open = true;
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
+  // Highlight the section currently in view.
+  const sections = links
+    .map((l) => ({ link: l, el: resolveTarget(l.dataset['target'] ?? '') }))
+    .filter((s): s is { link: HTMLElement; el: HTMLElement } => s.el !== null);
+  if ('IntersectionObserver' in window && sections.length > 0) {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting) continue;
+          const match = sections.find((s) => s.el === entry.target);
+          if (!match) continue;
+          for (const l of links) l.classList.toggle('active', l === match.link);
+        }
+      },
+      { rootMargin: '-40% 0px -55% 0px', threshold: 0 },
+    );
+    for (const s of sections) observer.observe(s.el);
+  }
+
+  // Auth button — reflects Sign Up / Log In / Log Out and runs the dialogs.
+  const authBtn = document.getElementById('navAuthBtn') as HTMLButtonElement | null;
+  const authLabel = document.getElementById('navAuthLabel');
+  const refreshAuth = (): void => {
+    if (!authBtn || !authLabel) return;
+    const state = privacyUI.authState();
+    if (state === 'signup') {
+      authLabel.textContent = 'Sign Up';
+      authBtn.classList.add('primary');
+      authBtn.classList.remove('online');
+      authBtn.title = 'Create a secure, private vault on this device';
+    } else if (state === 'login') {
+      authLabel.textContent = 'Log In';
+      authBtn.classList.add('primary');
+      authBtn.classList.remove('online');
+      authBtn.title = 'Unlock your encrypted data';
+    } else {
+      authLabel.textContent = 'Log Out';
+      authBtn.classList.remove('primary');
+      authBtn.classList.add('online');
+      authBtn.title = 'Lock your data (encrypted at rest)';
+    }
+  };
+  if (authBtn) {
+    authBtn.addEventListener('click', async () => {
+      await privacyUI.promptAuth();
+      refreshAuth();
+      // Body Scan reads/writes encrypted scans — refresh it after auth changes.
+      bodyScanPanel.refreshAfterAuthChange();
+    });
+    refreshAuth();
+  }
+
+  // Account button — server login / register / sync (separate from the vault).
+  const accountBtn = document.getElementById('navAccountBtn') as HTMLButtonElement | null;
+  const accountLabel = document.getElementById('navAccountLabel');
+  const refreshAccount = (): void => {
+    if (!accountBtn || !accountLabel) return;
+    const name = accountUI.username();
+    if (accountUI.isLoggedIn() && name) {
+      accountLabel.textContent = `👤 ${name}`;
+      accountBtn.classList.add('online');
+      accountBtn.title = 'Account & cloud sync';
+    } else {
+      accountLabel.textContent = '👤 Account';
+      accountBtn.classList.remove('online');
+      accountBtn.title = 'Log in or create an account for cloud sync';
+    }
+  };
+  if (accountBtn) {
+    accountBtn.addEventListener('click', async () => {
+      await accountUI.promptAccount();
+      refreshAccount();
+      refreshAuth();
+      bodyScanPanel.refreshAfterAuthChange();
+    });
+    refreshAccount();
+  }
+})();
 
 /**
  * Capture `count` frames from the live <video> element into ImageBitmaps for a
@@ -372,6 +552,18 @@ function activateTracking(): void {
     hud.classList.add('visible');
 
     statusEl.textContent = 'Tracking active. Counting reps...';
+
+    // Voice: announce exercise + setup instructions.
+    const catalogEntry = getExerciseByName(selectedExerciseName);
+    if (catalogEntry) {
+      voiceCoach.announceExerciseSetup(
+        catalogEntry.displayName,
+        catalogEntry.steps,
+        catalogEntry.cameraAngle,
+      );
+    } else {
+      voiceCoach.announceSessionStart();
+    }
   });
 }
 
@@ -699,6 +891,9 @@ function processFrame(): void {
       confidence: lm.visibility ?? 0,
     }));
 
+    // Store for the body scan panel to read on demand.
+    latestKeypoints = keypoints;
+
     const message: KeypointMessage = {
       type: 'keypoints',
       frameId: frameCount,
@@ -712,6 +907,11 @@ function processFrame(): void {
 
       // Update status text
       statusEl.textContent = getStatusText(status);
+
+      // Voice: framing guidance if score is low.
+      if (status.state === 'framing' && status.framingScore < 0.4) {
+        voiceCoach.announceFramingWarning('Step back so I can see your full body.');
+      }
 
       // Render position cues on canvas during positioning state
       if (status.state === 'positioning') {
@@ -742,6 +942,12 @@ function processFrame(): void {
     // Show form warnings on the UI canvas (non-mirrored, readable)
     if (deviations.length > 0) {
       renderFormWarnings(deviations);
+      // Voice: announce the most severe deviation.
+      const worst = deviations[0];
+      if (worst) {
+        const msg = worst.severity === 'critical' ? 'Stop! Dangerous position.' : 'Check your form.';
+        voiceCoach.announceDangerousForm(worst.jointName, msg);
+      }
     }
 
     // Check if rep completed
@@ -770,11 +976,15 @@ function processFrame(): void {
     // Mirror to the always-visible on-video HUD.
     hudReps.textContent = String(repCountNow);
     hudPhase.textContent = fsmStateNow;
-    if (repCountNow > prevReps && hudRepChip !== null) {
-      hudRepChip.classList.remove('pulse');
-      // Force reflow so the animation can retrigger on consecutive reps.
-      void hudRepChip.offsetWidth;
-      hudRepChip.classList.add('pulse');
+    if (repCountNow > prevReps) {
+      // HUD pulse.
+      if (hudRepChip !== null) {
+        hudRepChip.classList.remove('pulse');
+        void hudRepChip.offsetWidth;
+        hudRepChip.classList.add('pulse');
+      }
+      // Voice: count the rep.
+      voiceCoach.announceRep(repCountNow);
     }
     const tut = repCounter.getLastRepTutMs();
     if (tut !== null) {
@@ -905,6 +1115,8 @@ stopBtn.addEventListener('click', () => {
   preTrackingActive = true;
   preTrackingController = null;
   hud.classList.remove('visible');
+  voiceCoach.announceSessionEnd(repCounter.getRepCount());
+  voiceCoach.stop(); // Clear any remaining queue.
   statusEl.textContent = 'Stopped. Click Start to resume.';
   startBtn.disabled = false;
   stopBtn.disabled = true;
@@ -947,3 +1159,51 @@ skipBtn.addEventListener('click', () => {
 initMediaPipe().catch((err) => {
   statusEl.textContent = `Failed to load model: ${err instanceof Error ? err.message : String(err)}`;
 });
+
+// ---------------------------------------------------------------------------
+// Coach Session UX seam (spec 01, task 12.1) — OPT-IN, reversible
+// ---------------------------------------------------------------------------
+//
+// This is a minimal, reversible integration seam for the four-state Coach
+// session machine (SETUP → ARMED → WORKING → REVIEW). It is OFF by default: the
+// scrolling page above continues to work unchanged. Enable it with `?coach=1`
+// in the URL (or `localStorage.setItem('coachSessionUx','1')`).
+//
+// When enabled, it mounts the CoachController into the existing #video-container
+// over a fixture/mock Analysis event source (the live pose pipeline / spec 02
+// engine is NOT required here). This lets the new session UX be exercised before
+// the engine is wired.
+//
+// TODO(spec 01, task 12.1 follow-up): once the CoachController is fed by the
+// real Analysis engine (spec 02) and validated at 3 m, RETIRE the scrolling page
+// above — delete the legacy DOM wiring and make the CoachController the default
+// mount. Until then this stays behind the flag so nothing above regresses.
+{
+  const coachFlag =
+    new URLSearchParams(location.search).get('coach') === '1' ||
+    (() => {
+      try {
+        return localStorage.getItem('coachSessionUx') === '1';
+      } catch {
+        return false;
+      }
+    })();
+
+  if (coachFlag) {
+    void (async () => {
+      const [{ mountCoach }, { DemoReplaySource }] = await Promise.all([
+        import('../session/CoachController.js'),
+        import('../session/demoEventSource.js'),
+      ]);
+      const host = document.getElementById('video-container');
+      if (!host) return;
+      const events = new DemoReplaySource();
+      const coach = mountCoach(host, {
+        events,
+        voice: new VoiceCoach(),
+      });
+      // Expose for manual driving from the console during the demo.
+      (window as unknown as { __coach?: unknown }).__coach = { coach, events };
+    })();
+  }
+}

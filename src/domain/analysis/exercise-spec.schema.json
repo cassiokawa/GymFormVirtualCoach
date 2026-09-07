@@ -1,0 +1,243 @@
+{
+  "title": "ExerciseSpec",
+  "description": "Structural contract for a single exercise definition. An exercise is data, not code: every concrete id, name, and alias lives in the JSON documents this schema validates, never in TypeScript source.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "version",
+    "displayName",
+    "aliases",
+    "facets",
+    "mode",
+    "bilateral",
+    "landmarkPairs",
+    "requiredLandmarks",
+    "optionalLandmarks",
+    "camera",
+    "signal",
+    "rom",
+    "phases",
+    "faults"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Stable identifier for the exercise (data-only; never referenced in TypeScript).",
+      "minLength": 1
+    },
+    "version": {
+      "type": "string",
+      "description": "Spec version; a mismatch with stored calibration invalidates that calibration.",
+      "minLength": 1
+    },
+    "displayName": {
+      "type": "string",
+      "description": "Human-readable name shown in the exercise grid.",
+      "minLength": 1
+    },
+    "aliases": {
+      "type": "array",
+      "description": "Alternate names used for search/filtering.",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "facets": {
+      "type": "object",
+      "description": "Filterable classification facets for the exercise grid.",
+      "additionalProperties": false,
+      "required": ["equipment", "primaryMuscles", "position"],
+      "properties": {
+        "equipment": { "type": "string", "minLength": 1 },
+        "primaryMuscles": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "position": { "type": "string", "minLength": 1 }
+      }
+    },
+    "mode": {
+      "type": "string",
+      "description": "reps: counted repetitions. hold: timed isometric hold.",
+      "enum": ["reps", "hold"]
+    },
+    "bilateral": {
+      "type": "boolean",
+      "description": "Whether the movement is bilateral (left/right symmetric)."
+    },
+    "landmarkPairs": {
+      "type": "object",
+      "description": "Maps an unprefixed joint name to its left/right landmark indices for bilateral-midpoint resolution.",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["left", "right"],
+        "properties": {
+          "left": { "type": "integer", "minimum": 0 },
+          "right": { "type": "integer", "minimum": 0 }
+        }
+      }
+    },
+    "requiredLandmarks": {
+      "type": "array",
+      "description": "Landmark indices that must be confidently present; every expression landmark must appear here.",
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "optionalLandmarks": {
+      "type": "array",
+      "description": "Landmark indices used when available but not required.",
+      "items": { "type": "integer", "minimum": 0 }
+    },
+    "camera": {
+      "type": "object",
+      "description": "Preferred camera framing for this exercise.",
+      "additionalProperties": false,
+      "required": ["preferredAngleDeg", "toleranceDeg", "view"],
+      "properties": {
+        "preferredAngleDeg": { "type": "number" },
+        "toleranceDeg": { "type": "number", "minimum": 0 },
+        "view": { "type": "string", "minLength": 1 }
+      }
+    },
+    "signal": {
+      "type": "object",
+      "description": "The scalar signal expression and its smoothing configuration.",
+      "additionalProperties": false,
+      "required": ["expr", "smoothing"],
+      "properties": {
+        "expr": {
+          "type": "string",
+          "description": "Signal expression in the evaluator grammar, e.g. angle(hip,knee,ankle).",
+          "minLength": 1
+        },
+        "smoothing": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "minCutoff", "beta"],
+          "properties": {
+            "type": {
+              "type": "string",
+              "description": "Smoothing filter name; an unknown filter fails the build.",
+              "minLength": 1
+            },
+            "minCutoff": { "type": "number", "minimum": 0 },
+            "beta": { "type": "number", "minimum": 0 }
+          }
+        }
+      }
+    },
+    "rom": {
+      "type": "object",
+      "description": "Range-of-motion gate configuration.",
+      "additionalProperties": false,
+      "required": ["source", "floorPercentile", "gateTolerance"],
+      "properties": {
+        "source": { "type": "string", "minLength": 1 },
+        "floorPercentile": { "type": "number", "minimum": 0, "maximum": 100 },
+        "gateTolerance": { "type": "number", "minimum": 0 }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "description": "The generic phase machine definition.",
+      "additionalProperties": false,
+      "required": [
+        "states",
+        "initial",
+        "hysteresisPct",
+        "minPhaseDurationMs",
+        "transitions"
+      ],
+      "properties": {
+        "states": {
+          "type": "array",
+          "description": "The named phases of the movement.",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "initial": {
+          "type": "string",
+          "description": "The starting phase; must appear in states.",
+          "minLength": 1
+        },
+        "hysteresisPct": {
+          "type": "number",
+          "description": "Fraction of observed range a signal must cross past a boundary (semantic validator enforces >= 0.05)."
+        },
+        "minPhaseDurationMs": {
+          "type": "number",
+          "description": "Minimum time a phase must be active before a transition is accepted (semantic validator enforces >= 250)."
+        },
+        "transitions": {
+          "type": "array",
+          "description": "Guarded transitions evaluated in declaration order; for reps mode exactly one emits RepCompleted.",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to", "when"],
+            "properties": {
+              "from": { "type": "string", "minLength": 1 },
+              "to": { "type": "string", "minLength": 1 },
+              "when": {
+                "type": "string",
+                "description": "Guard expression in the evaluator grammar.",
+                "minLength": 1
+              },
+              "emits": {
+                "type": "string",
+                "description": "Optional domain event emitted on this transition.",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "velocity": {
+      "type": "object",
+      "description": "Optional relative-velocity tracking configuration. Only relative velocity loss is ever reported; no absolute units.",
+      "additionalProperties": false,
+      "required": ["trackedPoint", "axis", "normalizeBy"],
+      "properties": {
+        "trackedPoint": {
+          "type": "string",
+          "description": "Expression naming the point to track, e.g. midpoint(left_hip,right_hip).",
+          "minLength": 1
+        },
+        "axis": { "type": "string", "minLength": 1 },
+        "normalizeBy": { "type": "string", "minLength": 1 }
+      }
+    },
+    "faults": {
+      "type": "array",
+      "description": "Phase-scoped fault rules; the engine emits every detected fault without cue rationing.",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "phase", "when", "minDeviation", "severity", "cue"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "phase": {
+            "type": "string",
+            "description": "The phase this fault is evaluated within; must exist in phases.states.",
+            "minLength": 1
+          },
+          "when": {
+            "type": "string",
+            "description": "Guard expression; UNAVAILABLE suppresses the fault.",
+            "minLength": 1
+          },
+          "minDeviation": { "type": "number" },
+          "severity": {
+            "type": "string",
+            "enum": ["info", "warning", "critical"]
+          },
+          "cue": {
+            "type": "string",
+            "description": "Movement-focused cue (semantic validator enforces <= 4 words and banned-word-free).",
+            "minLength": 1
+          }
+        }
+      }
+    }
+  }
+}

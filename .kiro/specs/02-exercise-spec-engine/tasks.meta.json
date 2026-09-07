@@ -1,0 +1,241 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Establish Analysis-context types and directory layout": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618000
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223630344
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223732466
+      }
+    ],
+    "2.1 Author `exercise-spec.schema.json` and the `ExerciseSpec` TypeScript shape": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618028
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223739598
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223955747
+      }
+    ],
+    "2.2 Implement the JSON loader that reads specs from `src/domain/exercises`": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618053
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223962177
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224363215
+      }
+    ],
+    "3.1 Resolve unprefixed joints to bilateral midpoint and prefixed joints to side landmark": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618078
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223963458
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224364519
+      }
+    ],
+    "4. Implement the expression tokeniser and parser": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618106
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223740393
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223956810
+      }
+    ],
+    "5.1 Compile each AST once into a closure tree evaluated per frame with no parse/alloc": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618132
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223965835
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224365799
+      }
+    ],
+    "6. Implement smoothing and dSignal computation": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618153
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224374063
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224524883
+      }
+    ],
+    "7.1 Interpret transitions with declaration order, hysteresis band, and min phase duration": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618176
+      },
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224544212
+      }
+    ],
+    "7.2 Assemble rep records and evaluate the ROM gate on RepCompleted": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618199
+      }
+    ],
+    "7.3 Implement hold-mode HoldProgressed and stall/low-confidence handling": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618220
+      }
+    ],
+    "8. Checkpoint — evaluator and phase machine": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618240
+      }
+    ],
+    "9.1 Evaluate current-phase faults with precomputed confidence gates": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618266
+      }
+    ],
+    "10. Assemble the CompiledSpec and AnalysisEngine": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618289
+      }
+    ],
+    "11.1 Validate structure against the schema and report path + constraint on failure": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618308
+      }
+    ],
+    "11.2 Implement semantic checks": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618330
+      }
+    ],
+    "12.1 Build the fixture harness that replays an annotated landmark timeline through a spec": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618351
+      }
+    ],
+    "12.2 Implement `formcoach-spec validate <file>` and `replay <file> --fixture <id>`": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618373
+      }
+    ],
+    "14. Implement the hot-path ingest benchmark": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618396
+      }
+    ],
+    "15. Implement the migration parity gate": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618417
+      }
+    ],
+    "16. Final checkpoint — full engine wired and gated": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788223618438
+      }
+    ],
+    "2. Define the ExerciseSpec document contract and loader": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224363241
+      }
+    ],
+    "3. Implement joint reference resolution": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224364547
+      }
+    ],
+    "5. Compile the AST to a closure tree and implement UNAVAILABLE semantics": [
+      {
+        "executionId": "95853a2b-a17f-4810-bcc6-9c9428964a7f",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788224365830
+      }
+    ]
+  }
+}

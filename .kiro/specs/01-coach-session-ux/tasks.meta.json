@@ -1,0 +1,378 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1.1 Create context directory structure and the shared types module": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283449
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256289690
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256442459
+      }
+    ],
+    "2.1 Implement the pure `transition(ctx, ev)` function": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283476
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256450008
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256846533
+      }
+    ],
+    "2.4 Implement the SessionMachine runtime with single-surface mounting": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283497
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256869264
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257111121
+      }
+    ],
+    "3.1 Implement snapshot write/read and mute-flag persistence": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283519
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256866504
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257112443
+      }
+    ],
+    "4.1 Implement the AudioBus (Web Audio) with distinct sounds and haptics": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283540
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256451329
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256847927
+      }
+    ],
+    "4.3 Implement the SpeechChannel adapter over VoiceCoach": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283565
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256870356
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257114991
+      }
+    ],
+    "5.1 Implement one-cue-per-rep rationing with cooldown": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283584
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256452762
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256849388
+      }
+    ],
+    "6.1 Implement pure `filterExercises` and `recentFive`": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283605
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256453688
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256850283
+      }
+    ],
+    "6.4 Implement the ExerciseGrid component": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283622
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257122709
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788260918139
+      }
+    ],
+    "7.1 Implement the FramingValidator verdict": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283639
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256454999
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256851606
+      }
+    ],
+    "8.1 Implement PhaseArc and RepCountDisplay": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283665
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256867778
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257113878
+      }
+    ],
+    "9.1 Implement the SetupSurface": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283690
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788260941199
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788261332688
+      }
+    ],
+    "9.2 Implement the ArmedSurface with 5-second audible countdown": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283709
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257124011
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788260935970
+      }
+    ],
+    "9.3 Implement the WorkingSurface (three-child allowlist)": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283731
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257125457
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788260915800
+      }
+    ],
+    "10.1 Implement ReviewSurface, SetSummary, and VelocityChart": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283747
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257126761
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788260916744
+      }
+    ],
+    "11. Checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283764
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262046862
+      }
+    ],
+    "12.1 Subscribe the machine to the Analysis event stream and replace the scrolling page": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283781
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788261339024
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262021970
+      }
+    ],
+    "13. Final checkpoint - Ensure all tests pass": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256283798
+      },
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262045962
+      }
+    ],
+    "1. Define Session UX and Coaching contracts": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256442486
+      }
+    ],
+    "5. Implement the CueRationer": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256849416
+      }
+    ],
+    "7. Implement framing and angle validation": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788256851633
+      }
+    ],
+    "2. Implement the session state machine": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257111147
+      }
+    ],
+    "3. Implement session persistence and the 120s restore window": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257112464
+      }
+    ],
+    "8. Implement the distance-legible working components": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257113907
+      }
+    ],
+    "4. Implement the Coaching audio seam": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788257115022
+      }
+    ],
+    "10. Implement the post-set review surface": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788260916766
+      }
+    ],
+    "6. Implement exercise selection": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788260918162
+      }
+    ],
+    "9. Implement the session surfaces": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788261332717
+      }
+    ],
+    "12. Wire the machine to Analysis events and mount the app entry": [
+      {
+        "executionId": "53beb829-6a6f-4449-8d86-dcdbaf01b7f0",
+        "chatSessionId": "2bc146c9-9a65-403e-bb1a-9b991565ec33",
+        "timestamp": 1788262021997
+      }
+    ]
+  }
+}

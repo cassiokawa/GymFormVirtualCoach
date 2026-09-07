@@ -13,5 +13,8 @@ export default defineConfig({
   test: {
     // vitest auto-detects the environment per file via the
     // `@vitest-environment` docblock; no global environment needed.
+    // The sync server (server/**) is plain Node ESM using node:sqlite and is
+    // tested via `node --test` (npm run test:server), not vitest.
+    exclude: ['**/node_modules/**', '**/dist/**', 'server/**', 'scripts/**'],
   },
 });

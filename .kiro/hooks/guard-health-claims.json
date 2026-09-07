@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Guard health claims and data classification",
+  "description": "On saving user-facing copy/cue files or privacy-classified code, review against coaching-safety.md and the compile-time data-classification boundary.",
+  "trigger": "PostFileSave",
+  "fileMatchPattern": "src/**/*.{ts,tsx,json}",
+  "action": {
+    "type": "agent",
+    "prompt": "Review the saved file for two guardrails. (1) Coaching safety: no banned words in any user-facing string (injury, injure, dysfunction, pathology, diagnose, imbalance, damage, dangerous, unsafe, corrective), no aesthetic language (lean, toned, shredded, flabby, too heavy, ideal weight), no grades/scores/streaks/progress bars on body or workout data, and every body/movement surface carries the not-a-medical-device notice \u2014 per .kiro/steering/coaching-safety.md. (2) Data classification: sensitive/classified data must never reach a network sink except as an encrypted envelope; this boundary is a compile-time type error (spec 06), not a runtime check \u2014 flag any code that would let classified data pass to fetch/XHR/WebSocket unencrypted. Report violations with file, line, and the specific rule."
+  }
+}

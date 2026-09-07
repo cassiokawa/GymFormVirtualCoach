@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Rep-count regression and hot-path benchmark",
+  "description": "On saving analysis/engine sources, run the fixture rep-count parity harness and the ingest hot-path benchmark.",
+  "trigger": "PostFileSave",
+  "fileMatchPattern": "src/{domain,analysis,engine}/**/*.ts",
+  "action": {
+    "type": "agent",
+    "prompt": "Analysis source changed. Run the fixture rep-count parity harness (old vs new implementation over all fixtures) and BLOCK on any rep-count regression, per spec 02 testing strategy. Then run the ingest hot-path benchmark and confirm it stays <= 3 ms p95 with all specs loaded (tech.md budget). Report regressions with the fixture id, expected vs actual rep count, and the p95 timing."
+  }
+}

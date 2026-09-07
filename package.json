@@ -6,11 +6,25 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit",
+    "build:web": "vite build",
+    "scan:exercise-boundary": "node scripts/exercise-data-boundary-scan.mjs",
+    "check": "node scripts/exercise-data-boundary-scan.mjs && node scripts/classification-guard.mjs",
     "test": "vitest run",
     "test:watch": "vitest",
+    "gate:parity": "vitest run src/domain/analysis/parity.test.ts",
     "fetch-models": "node scripts/copy-mediapipe-wasm.mjs && node scripts/fetch-models.mjs",
     "copy-wasm": "node scripts/copy-mediapipe-wasm.mjs",
-    "postinstall": "node scripts/copy-mediapipe-wasm.mjs"
+    "postinstall": "node scripts/copy-mediapipe-wasm.mjs",
+    "server": "node server/server.mjs",
+    "dev:all": "node server/server.mjs & vite",
+    "test:server": "node --test \"server/**/*.test.mjs\" \"scripts/**/*.test.mjs\"",
+    "test:all": "vitest run && node --test \"server/**/*.test.mjs\" \"scripts/**/*.test.mjs\"",
+    "spec:validate": "node scripts/formcoach-spec.mjs validate",
+    "spec:replay": "node scripts/formcoach-spec.mjs replay",
+    "scan:classification": "node scripts/classification-guard.mjs"
+  },
+  "bin": {
+    "formcoach-spec": "scripts/formcoach-spec.mjs"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",

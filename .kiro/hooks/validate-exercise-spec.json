@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "1.0",
+  "name": "Validate exercise spec",
+  "description": "On saving an exercise definition JSON, run schema + semantic validation and the fixture replay.",
+  "trigger": "PostFileSave",
+  "fileMatchPattern": "src/domain/exercises/**/*.json",
+  "action": {
+    "type": "agent",
+    "prompt": "An exercise spec JSON was saved. Validate it against .kiro/steering/exercise-spec-authoring.md and spec 02 (exercise-spec-engine): every landmark used in an expression is in requiredLandmarks; every phase named in a transition/fault exists in phases.states; exactly one transition emits RepCompleted for mode 'reps'; the phase graph is strongly connected from initial; every cue is <= 4 words and passes the banned-word list in coaching-safety.md; hysteresisPct >= 0.05 and minPhaseDurationMs >= 250; a fixture exists for the spec id. If the CLI exists, run `npx formcoach-spec validate <file>` and `npx formcoach-spec replay <file> --fixture <id>`. Report any failure with the exact constraint violated and the path."
+  }
+}

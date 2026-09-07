@@ -77,6 +77,45 @@
     .app-header .tagline {
       margin-top: 6px; font-size: 0.85rem; color: var(--text-dim);
     }
+    /* ---- Top navigation bar ---------------------------------------------- */
+    .app-nav {
+      position: sticky; top: 0; z-index: 200;
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      justify-content: center;
+      padding: 8px 12px; margin: 8px 0 14px;
+      background: color-mix(in srgb, var(--bg-1, #14151a) 88%, transparent);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--line, #2a2c34); border-radius: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .app-nav .nav-link {
+      appearance: none; border: 1px solid transparent; cursor: pointer;
+      background: transparent; color: var(--text-dim, #aeb4c2);
+      font-size: 0.82rem; font-weight: 600; letter-spacing: 0.01em;
+      padding: 8px 12px; border-radius: 10px; white-space: nowrap;
+      transition: background 0.15s, color 0.15s;
+    }
+    .app-nav .nav-link:hover { background: var(--bg-2, #1c1e26); color: var(--text, #fff); }
+    .app-nav .nav-link.active { background: var(--accent, #00d4a0); color: #04241c; }
+    .app-nav .nav-spacer { flex: 1 1 auto; min-width: 8px; }
+    .app-nav .nav-auth {
+      display: inline-flex; align-items: center; gap: 6px;
+      border: 1px solid var(--line, #2a2c34); cursor: pointer;
+      background: var(--bg-2, #1c1e26); color: var(--text, #fff);
+      font-size: 0.82rem; font-weight: 700; padding: 8px 14px; border-radius: 10px;
+      white-space: nowrap;
+    }
+    .app-nav .nav-auth.primary { background: var(--accent, #00d4a0); color: #04241c; border-color: transparent; }
+    .app-nav .nav-auth .auth-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--danger, #e5484d); }
+    .app-nav .nav-auth.online .auth-dot { background: var(--accent, #00d4a0); }
+    /* Offset anchored scroll so sticky nav doesn't cover section tops. */
+    .nav-anchor { scroll-margin-top: 72px; }
+    @media (max-width: 640px) {
+      .app-nav { gap: 4px; padding: 6px 8px; }
+      .app-nav .nav-link { padding: 7px 9px; font-size: 0.76rem; }
+      .app-nav .nav-spacer { flex-basis: 100%; height: 0; }
+      .app-nav .nav-auth { width: 100%; justify-content: center; }
+    }
     /* Legacy h1 kept hidden in case anything references it */
     h1 { font-size: 1.5rem; }
 
@@ -379,6 +418,20 @@
     <div class="brand"><span class="logo">🏋️</span> Form Coach</div>
     <div class="tagline">Real-time pose analysis &amp; rep tracking — all in your browser</div>
   </header>
+  <nav class="app-nav" id="appNav" aria-label="Primary">
+    <button class="nav-link" data-target="video-container">🎥 Coach</button>
+    <button class="nav-link" data-target="section-insights">🧠 Insights</button>
+    <button class="nav-link" data-target="section-bodyscan">📐 Body Scan</button>
+    <button class="nav-link" data-target="section-log">📋 Log</button>
+    <button class="nav-link" data-target="section-lab">🔬 Lab</button>
+    <span class="nav-spacer"></span>
+    <button class="nav-auth" id="navAccountBtn" type="button" title="Account & cloud sync">
+      <span id="navAccountLabel">👤 Account</span>
+    </button>
+    <button class="nav-auth" id="navAuthBtn" type="button">
+      <span class="auth-dot"></span><span id="navAuthLabel">Unlock</span>
+    </button>
+  </nav>
   <div id="status">Click Start to begin pose detection</div>
   <div id="video-container">
     <video id="video" autoplay playsinline muted></video>
@@ -438,6 +491,7 @@
     <button id="stopBtn" disabled>■ Stop</button>
     <button id="skipBtn" style="display:none;">⏭ Skip Lock</button>
     <button id="labToggleBtn" style="background:#6c5ce7; color:#fff;">🔬 Lab Mode</button>
+    <button id="voiceToggleBtn" style="background:#e17055; color:#fff;">🔊 Coach</button>
   </div>
   <div id="routine-builder" style="margin-top:16px; width:640px; max-width:100%;">
     <details>
