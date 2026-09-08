@@ -5,7 +5,6 @@
   "outputDirectory": "dist",
   "headers": [
     {
-      "//": "COOP + COEP enable cross-origin isolation, which unlocks SharedArrayBuffer and therefore multi-threaded WASM SIMD for pose inference. COEP is set to 'credentialless' (not 'require-corp') so that the app can still load the MediaPipe WASM runtime and pose model from cross-origin CDNs (cdn.jsdelivr.net, storage.googleapis.com) — those do not send Cross-Origin-Resource-Policy headers and would be blocked by 'require-corp'. Browsers without 'credentialless' support (notably Safari) fall back to the vendored no-SIMD WASM path and the app's degradation ladder.",
       "source": "/(.*)",
       "headers": [
         { "key": "Cross-Origin-Opener-Policy", "value": "same-origin" },
@@ -13,7 +12,6 @@
       ]
     },
     {
-      "//": "Ensure .wasm assets are served with the correct MIME type so streaming compilation (WebAssembly.instantiateStreaming) works.",
       "source": "/(.*)\\.wasm",
       "headers": [
         { "key": "Content-Type", "value": "application/wasm" }
